@@ -49,6 +49,8 @@ jobs:
           subprocess.run([str(Path('dist/PCBA3D.exe').resolve()), '--self-test'], check=True, timeout=180)
           data=json.loads(Path('dist/自检结果.json').read_text(encoding='utf8'))
           assert data['ok'] and data['models']==64 and data['sample'] is False, data
+      - name: Generate synthetic board using EXE itself
+        run: python scripts/verify_public_exe.py
       - name: Package EXE, external models and licenses
         run: python scripts/package_release.py --dist dist
       - uses: actions/upload-artifact@v4
