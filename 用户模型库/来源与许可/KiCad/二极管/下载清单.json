@@ -1,0 +1,116 @@
+{
+  "files": [
+    {
+      "file": "D_SOD-123F.step",
+      "bytes": 42604,
+      "sha256": "132323445e3d1f9231e81c083cd88a33cd204dd8b96063bb2ed1f3ab4470c7e7",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-123F.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-123F.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SOD-128.step",
+      "bytes": 48789,
+      "sha256": "c98f6c45e31c085ad7293f96c19813d749b20d47245b9c5c01f816003df24d8c",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-128.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-128.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SOD-323F.step",
+      "bytes": 43271,
+      "sha256": "be5930ed2efe5eca953bd400465c68e8d6fe18bbed65f5a40cb96114f48e8ca0",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-323F.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-323F.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SOD-523.step",
+      "bytes": 43207,
+      "sha256": "b525222377930c32abea58606bffba3aaf171cc66ac292b82d28a82d646d995d",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-523.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-523.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SOD-882.step",
+      "bytes": 36174,
+      "sha256": "b109a9e50feebcf8bae5a230cf805dc06e2eb2b9d976f1922b195c16710c5415",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-882.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-882.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SOD-923.step",
+      "bytes": 43849,
+      "sha256": "2ab2eb57942276dc90db0148894bc98e40b6ed97c8a35c3c24e1f40fc146235f",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-923.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SOD-923.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SMA.step",
+      "bytes": 70794,
+      "sha256": "1cfddd4e3b1bf22b8fc6ee3258c2aade882ed7b85b528e23b9db42437775a1db",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMA.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SMA.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SMB.step",
+      "bytes": 70508,
+      "sha256": "029466277d91e9f5492556be93e46611049e07115c7913880c547afa96058ed4",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMB.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SMB.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SMC.step",
+      "bytes": 70688,
+      "sha256": "30dab4c2e22239b7e3694a4d45304e04255c6b70a79d28e9c34c6072ba647991",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMC.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SMC.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_SMF.step",
+      "bytes": 44376,
+      "sha256": "975744dfb68222ac12c4526a1d1a96cde7f8c71c46bcd23a886ac44532259021",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMF.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_SMF.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_MELF.step",
+      "bytes": 18644,
+      "sha256": "3b1fa81e2e3ea0ef2e0ddbeb3f62b354a14174610250e6069a5076959a63f835",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MELF.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_MELF.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_MiniMELF.step",
+      "bytes": 18895,
+      "sha256": "bab3a3356a14efb0438caca9adf53472dea34425715606e933f092f87f73f650",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MiniMELF.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_MiniMELF.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "D_MicroMELF.step",
+      "bytes": 18883,
+      "sha256": "ad171ddd866e5339c7d01d1412b0a7734c62837ba1d636cb4f67837cad644639",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MicroMELF.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FD_MicroMELF.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "CREDITS.md",
+      "bytes": 957,
+      "sha256": "78cbed38467964f719152fe51f447f49b44c951d4b3bf47674b7c461c83e6e3c",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/CREDITS.md",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Diode_SMD.3dshapes%2FCREDITS.md/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    }
+  ]
+}

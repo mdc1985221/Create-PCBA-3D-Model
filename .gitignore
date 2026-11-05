@@ -1,0 +1,40 @@
+# Local credentials and per-machine state
+API设置.json
+**/API设置.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+calibration_rules.json
+
+# User production data and generated projects
+工程/
+模型草稿/
+发布/
+输入资料/
+历史导出/
+坐标导出/
+自检结果.json
+自检诊断.log
+PCBA3D错误日志.txt
+*.log
+
+# Python / packaging / native runtime
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+_work/
+release/
+*.spec
+build-info.json
+*.exe
+*.dll
+*.pyd
+*.zip
+*.7z
+.DS_Store
+Thumbs.db

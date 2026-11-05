@@ -1,0 +1,9 @@
+# Recorded Windows Python 3.13 build dependencies. Third-party licenses apply.
+numpy==2.2.3
+scipy==1.17.1
+Pillow==11.1.0
+openpyxl==3.1.5
+xlrd==2.0.2
+cadquery-ocp==8.0.1.1.0
+vtk==9.6.2
+pypdf==6.10.0

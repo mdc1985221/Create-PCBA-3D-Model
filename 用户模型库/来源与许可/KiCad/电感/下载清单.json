@@ -1,0 +1,204 @@
+{
+  "files": [
+    {
+      "file": "L_0201_0603Metric.step",
+      "bytes": 43984,
+      "sha256": "303a886d7d6d526df33deb11f533d5e25b0f1acdadadb70657d7df635d21352e",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0201_0603Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_0201_0603Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_0603_1608Metric.step",
+      "bytes": 43450,
+      "sha256": "b0136ad7160588d2f5dac8c85da84a35646db656b5bc54bbb873b6b548eedbb3",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0603_1608Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_0603_1608Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_0805_2012Metric.step",
+      "bytes": 43618,
+      "sha256": "751a8ae26d20698bfe8303aa2fc7ec986a8b9a7154699b94bf2a13d4ad401425",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0805_2012Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_0805_2012Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_1206_3216Metric.step",
+      "bytes": 43450,
+      "sha256": "7a76ea34101f04e5f76cf96aa1ead38be0f0b388f5d21e9dafbb3047c495e5dd",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1206_3216Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_1206_3216Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_1210_3225Metric.step",
+      "bytes": 43502,
+      "sha256": "f73399f912d5bdb736d1e834d65517d3bfe017b7e95bfaf2a526961758a8983e",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1210_3225Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_1210_3225Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_1812_4532Metric.step",
+      "bytes": 43526,
+      "sha256": "9e8932c5668321b159527fed5f77d0a3674cbe01285447793724992eb1274799",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1812_4532Metric.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_1812_4532Metric.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA252010S.step",
+      "bytes": 50721,
+      "sha256": "676aa7998235cc2565a68b78ec0d16f3f3752e047b3799c235d1a976a01ecdf7",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA252010S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA252010S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA252012S.step",
+      "bytes": 50733,
+      "sha256": "0b61357300bbbe09d3b78284c0f803da9e8275e3e988021506f0740f2b458453",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA252012S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA252012S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA3012S.step",
+      "bytes": 50770,
+      "sha256": "49ef5ac15c41171002430ca6a9ad3254dddc55d33ba465af09cf88aef1b608dc",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA3012S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA3012S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA3015S.step",
+      "bytes": 50770,
+      "sha256": "e4400c1c54b83dc74d7eec5cd1fb45d05904efb3cd046c55b482f8d5d75e3ee6",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA3015S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA3015S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA4018S.step",
+      "bytes": 50614,
+      "sha256": "c97e4f7d384db1345c55e9242f7330860f2a989212e53d86d10279c63fce2924",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4018S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA4018S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA4020S.step",
+      "bytes": 50533,
+      "sha256": "6b2668c996b6b2f17dcf14a154052927c3b8c0c5a4fb22e00c64ef0e6b522d49",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4020S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA4020S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA4030S.step",
+      "bytes": 50606,
+      "sha256": "d4b86a2358a1aa286e351c21caa2c5e17f7feb88a18fcea01e2ac122a9ea41ce",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4030S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA4030S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA5020S.step",
+      "bytes": 50565,
+      "sha256": "4a71141cc15aa2c417dfea1445b89d06b2ec13b11ae9093b3b5a105b89c27cbc",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA5020S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA5020S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA5040S.step",
+      "bytes": 50565,
+      "sha256": "1ebed6145fe89275b44052cd1a815b178ede95c8a5088941df5884251e2f6135",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA5040S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA5040S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA6028S.step",
+      "bytes": 50511,
+      "sha256": "2f9e27532335bfeb127e3b92dc2cfb154ae1bd0ee64cde93c754ca9e888f3fc1",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA6028S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA6028S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA6045S.step",
+      "bytes": 50517,
+      "sha256": "fc82c838b1c025c089b01cd1672802f063ab462ee0e9d17ab4d768941faf08c0",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA6045S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA6045S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_SWPA8040S.step",
+      "bytes": 50487,
+      "sha256": "ac3d2d190d257493e77c00082c5cc1ac4bd6e4141d5390dba51cfc778c4f73f9",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA8040S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_SWPA8040S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA0412S.step",
+      "bytes": 50586,
+      "sha256": "ba6e2ff3d6f6cd652435a3b91c70cd870a8aad1839873f0797271e9fb808c28b",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0412S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA0412S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA0402S.step",
+      "bytes": 50631,
+      "sha256": "fbe0404d854890fa6395d1fc089ffabe8750de0a6f12aabc5e2648d7163f2bc1",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0402S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA0402S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA0503S.step",
+      "bytes": 50727,
+      "sha256": "7937ae329cb8563da8211812722a72852755c40017b22dc4778486161d10c9dc",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0503S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA0503S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA0603S.step",
+      "bytes": 50763,
+      "sha256": "49c81480dd6d64f82c14c4cad40c9febaa9cccd5f94432c417deb1f964836af6",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0603S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA0603S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA0804S.step",
+      "bytes": 50727,
+      "sha256": "acc637bb73ae5974c98250e970c34ca8fcf06a53cb0aa02b7f866c3543e62088",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0804S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA0804S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "L_Sunlord_MWSA1004S.step",
+      "bytes": 50491,
+      "sha256": "bd5c19a187e0c55df22893bc1bde42659055c37d7969d195872bdef459fbc8d4",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA1004S.step",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FL_Sunlord_MWSA1004S.step/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    },
+    {
+      "file": "CREDITS.md",
+      "bytes": 1490,
+      "sha256": "b5dd6cd8068ec1ded2b834135254f667de5f274dd6000e928ad53bc1a15d8a5b",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "source_url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/CREDITS.md",
+      "download_url": "https://gitlab.com/api/v4/projects/21604637/repository/files/Inductor_SMD.3dshapes%2FCREDITS.md/raw?ref=8975715167d1a76f9b44be155ac02326f704cdbb"
+    }
+  ]
+}

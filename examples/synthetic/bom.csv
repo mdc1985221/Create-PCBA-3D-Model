@@ -1,0 +1,7 @@
+ref,value,package,quantity
+R1,10k,R_0402,1
+C1,0.1uF,C_0603,1
+L1,10uH,L_0805,1
+D1,Diode,SOD-523,1
+Q1,Transistor,SOT23,1
+L2,4.7uH,SWPA4030S,1

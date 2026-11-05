@@ -1,0 +1,674 @@
+[
+  {
+    "id": "C_0201",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "C_0402",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "C_0603",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "C_0805",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "C_1206",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "DFN12_3x3",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "D_SOD123",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "D_SOD323",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "LED_0603",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "L_0402",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "L_1008",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "R_0201",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "R_0402",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "R_0603",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "SOT-23-5",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "SOT-23-6",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "SOT-23",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "XTAL_3215",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "XTAL_3225",
+    "origin": "KiCad/StepUp WRL",
+    "license": "CC-BY-SA-4.0 with KiCad design-output exception"
+  },
+  {
+    "id": "USER_KiCad_C_1210",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "C_1210_3225Metric.step",
+      "sha256": "f8510481c5044113cf49b0fa6dd54ddab9224508bd6808e1afab8ef0cefdefc9",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Capacitor_SMD.3dshapes/C_1210_3225Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_C_2010",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "C_2010_5025Metric.step",
+      "sha256": "e6b328025b25acd08435a24672d5b9912781e124789a3f1c61d83cf0d95c6a27",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Capacitor_SMD.3dshapes/C_2010_5025Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_C_2512",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "C_2512_6332Metric.step",
+      "sha256": "125ad6ec37d098b6d351423e0b33ddd51c8e1cf71e402adf7ce2fc79a7dd4562",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Capacitor_SMD.3dshapes/C_2512_6332Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_R_0805",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "R_0805_2012Metric.step",
+      "sha256": "ded342cdb394fb45395227beaaa75cc390613cf2581b29cd6d22c12abd6103b2",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Resistor_SMD.3dshapes/R_0805_2012Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_R_1206",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "R_1206_3216Metric.step",
+      "sha256": "f5d1ea5c47935091292bd1c6c698e0df88d3d4bbf92bf66b4c97e49df5be9ebc",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Resistor_SMD.3dshapes/R_1206_3216Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_R_1210",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "R_1210_3225Metric.step",
+      "sha256": "44b152a107ee844595f54f1205cd4e0e37cebb9635affbe45f530daada41d245",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Resistor_SMD.3dshapes/R_1210_3225Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_R_2010",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "R_2010_5025Metric.step",
+      "sha256": "6f990878f55f2458c0263e55075c72360fd33db78dbf5aa5c5ba731c9bca560b",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Resistor_SMD.3dshapes/R_2010_5025Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_R_2512",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "R_2512_6332Metric.step",
+      "sha256": "76b2052a3c120193de7cdc0af99157b6f375e9a4af7721e3e3d012968c877f27",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Resistor_SMD.3dshapes/R_2512_6332Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Mesh split by source face colours; mapped to existing body/terminal palette; original solid retained; source board datum preserved."
+    }
+  },
+  {
+    "id": "USER_KiCad_L_0201_0603Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_0201_0603Metric.step",
+      "sha256": "303a886d7d6d526df33deb11f533d5e25b0f1acdadadb70657d7df635d21352e",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0201_0603Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_0603_1608Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_0603_1608Metric.step",
+      "sha256": "b0136ad7160588d2f5dac8c85da84a35646db656b5bc54bbb873b6b548eedbb3",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0603_1608Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_0805_2012Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_0805_2012Metric.step",
+      "sha256": "751a8ae26d20698bfe8303aa2fc7ec986a8b9a7154699b94bf2a13d4ad401425",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_0805_2012Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_1206_3216Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_1206_3216Metric.step",
+      "sha256": "7a76ea34101f04e5f76cf96aa1ead38be0f0b388f5d21e9dafbb3047c495e5dd",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1206_3216Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_1210_3225Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_1210_3225Metric.step",
+      "sha256": "f73399f912d5bdb736d1e834d65517d3bfe017b7e95bfaf2a526961758a8983e",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1210_3225Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_1812_4532Metric",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_1812_4532Metric.step",
+      "sha256": "9e8932c5668321b159527fed5f77d0a3674cbe01285447793724992eb1274799",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_1812_4532Metric.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA252010S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA252010S.step",
+      "sha256": "676aa7998235cc2565a68b78ec0d16f3f3752e047b3799c235d1a976a01ecdf7",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA252010S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA252012S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA252012S.step",
+      "sha256": "0b61357300bbbe09d3b78284c0f803da9e8275e3e988021506f0740f2b458453",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA252012S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA3012S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA3012S.step",
+      "sha256": "49ef5ac15c41171002430ca6a9ad3254dddc55d33ba465af09cf88aef1b608dc",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA3012S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA3015S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA3015S.step",
+      "sha256": "e4400c1c54b83dc74d7eec5cd1fb45d05904efb3cd046c55b482f8d5d75e3ee6",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA3015S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA4018S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA4018S.step",
+      "sha256": "c97e4f7d384db1345c55e9242f7330860f2a989212e53d86d10279c63fce2924",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4018S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA4020S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA4020S.step",
+      "sha256": "6b2668c996b6b2f17dcf14a154052927c3b8c0c5a4fb22e00c64ef0e6b522d49",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4020S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA4030S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA4030S.step",
+      "sha256": "d4b86a2358a1aa286e351c21caa2c5e17f7feb88a18fcea01e2ac122a9ea41ce",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA4030S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA5020S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA5020S.step",
+      "sha256": "4a71141cc15aa2c417dfea1445b89d06b2ec13b11ae9093b3b5a105b89c27cbc",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA5020S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA5040S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA5040S.step",
+      "sha256": "1ebed6145fe89275b44052cd1a815b178ede95c8a5088941df5884251e2f6135",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA5040S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA6028S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA6028S.step",
+      "sha256": "2f9e27532335bfeb127e3b92dc2cfb154ae1bd0ee64cde93c754ca9e888f3fc1",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA6028S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA6045S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA6045S.step",
+      "sha256": "fc82c838b1c025c089b01cd1672802f063ab462ee0e9d17ab4d768941faf08c0",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA6045S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_SWPA8040S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_SWPA8040S.step",
+      "sha256": "ac3d2d190d257493e77c00082c5cc1ac4bd6e4141d5390dba51cfc778c4f73f9",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_SWPA8040S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA0412S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA0412S.step",
+      "sha256": "ba6e2ff3d6f6cd652435a3b91c70cd870a8aad1839873f0797271e9fb808c28b",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0412S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA0402S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA0402S.step",
+      "sha256": "fbe0404d854890fa6395d1fc089ffabe8750de0a6f12aabc5e2648d7163f2bc1",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0402S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA0503S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA0503S.step",
+      "sha256": "7937ae329cb8563da8211812722a72852755c40017b22dc4778486161d10c9dc",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0503S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA0603S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA0603S.step",
+      "sha256": "49c81480dd6d64f82c14c4cad40c9febaa9cccd5f94432c417deb1f964836af6",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0603S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA0804S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA0804S.step",
+      "sha256": "acc637bb73ae5974c98250e970c34ca8fcf06a53cb0aa02b7f866c3543e62088",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA0804S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_L_Sunlord_MWSA1004S",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "L_Sunlord_MWSA1004S.step",
+      "sha256": "bd5c19a187e0c55df22893bc1bde42659055c37d7969d195872bdef459fbc8d4",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Inductor_SMD.3dshapes/L_Sunlord_MWSA1004S.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": null
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-123F",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-123F.step",
+      "sha256": "132323445e3d1f9231e81c083cd88a33cd204dd8b96063bb2ed1f3ab4470c7e7",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-123F.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-128",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-128.step",
+      "sha256": "c98f6c45e31c085ad7293f96c19813d749b20d47245b9c5c01f816003df24d8c",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-128.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-323F",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-323F.step",
+      "sha256": "be5930ed2efe5eca953bd400465c68e8d6fe18bbed65f5a40cb96114f48e8ca0",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-323F.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-523",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-523.step",
+      "sha256": "b525222377930c32abea58606bffba3aaf171cc66ac292b82d28a82d646d995d",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-523.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-882",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-882.step",
+      "sha256": "b109a9e50feebcf8bae5a230cf805dc06e2eb2b9d976f1922b195c16710c5415",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-882.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SOD-923",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SOD-923.step",
+      "sha256": "2ab2eb57942276dc90db0148894bc98e40b6ed97c8a35c3c24e1f40fc146235f",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SOD-923.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SMA",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SMA.step",
+      "sha256": "1cfddd4e3b1bf22b8fc6ee3258c2aade882ed7b85b528e23b9db42437775a1db",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMA.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SMB",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SMB.step",
+      "sha256": "029466277d91e9f5492556be93e46611049e07115c7913880c547afa96058ed4",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMB.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SMC",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SMC.step",
+      "sha256": "30dab4c2e22239b7e3694a4d45304e04255c6b70a79d28e9c34c6072ba647991",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMC.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_SMF",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_SMF.step",
+      "sha256": "975744dfb68222ac12c4526a1d1a96cde7f8c71c46bcd23a886ac44532259021",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_SMF.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_MELF",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_MELF.step",
+      "sha256": "3b1fa81e2e3ea0ef2e0ddbeb3f62b354a14174610250e6069a5076959a63f835",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MELF.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_MiniMELF",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_MiniMELF.step",
+      "sha256": "bab3a3356a14efb0438caca9adf53472dea34425715606e933f092f87f73f650",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MiniMELF.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  },
+  {
+    "id": "USER_KiCad_D_MicroMELF",
+    "origin": {
+      "kind": "curated_kicad_step",
+      "file": "D_MicroMELF.step",
+      "sha256": "ad171ddd866e5339c7d01d1412b0a7734c62837ba1d636cb4f67837cad644639",
+      "url": "https://gitlab.com/kicad/libraries/kicad-packages3D/-/blob/8975715167d1a76f9b44be155ac02326f704cdbb/Diode_SMD.3dshapes/D_MicroMELF.step",
+      "commit": "8975715167d1a76f9b44be155ac02326f704cdbb",
+      "license": "CC-BY-SA-4.0 with KiCad design-output exception",
+      "modifications": "Original solid geometry and board datum retained. Mesh split into body/terminals/cathode stripe. Colours normalised consistently for preview and STEP.",
+      "cathode_axis": "-X"
+    }
+  }
+]

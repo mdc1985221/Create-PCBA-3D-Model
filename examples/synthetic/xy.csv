@@ -1,0 +1,7 @@
+ref,x,y,rotation,side,package,value
+R1,8,8,0,top,R_0402,10k
+C1,16,8,90,top,C_0603,0.1uF
+L1,24,8,180,top,L_0805,10uH
+D1,32,8,270,top,SOD-523,Diode
+Q1,8,20,0,bottom,SOT23,Transistor
+L2,24,20,90,bottom,SWPA4030S,4.7uH

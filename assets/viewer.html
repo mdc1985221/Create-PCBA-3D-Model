@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>GK7205V10_MB_V01_RA · PCBA 3D</title>
+<style>
+  :root{
+    --bg:#0b0d11; --panel:#14171d; --panel2:#1b1f27; --line:#282e39;
+    --txt:#e7ebf2; --dim:#858da0; --acc:#4ea1ff; --acc2:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+    font-family:"Inter","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;
+    -webkit-font-smoothing:antialiased}
+  #app{position:fixed;inset:0}
+  #view{position:absolute;inset:0;left:272px}
+  canvas{display:block}
+
+  #side{position:absolute;left:0;top:0;bottom:0;z-index:5;width:272px;background:rgba(20,23,29,.93);
+    border-right:1px solid var(--line);display:flex;flex-direction:column;backdrop-filter:blur(10px)}
+  #side h1{font-size:12.5px;font-weight:600;margin:0;padding:13px 15px 3px;letter-spacing:.02em}
+  #side .sub{font-size:10.5px;color:var(--dim);padding:0 15px 11px;line-height:1.55}
+  .sec{border-top:1px solid var(--line);padding:10px 15px}
+  .sec .t{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+  .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:5px;
+    padding:4px 8px;font-size:11px;cursor:pointer;transition:.15s}
+  button:hover{border-color:#3d4759;background:#252a35}
+  button.on{background:rgba(78,161,255,.16);border-color:var(--acc);color:#cfe6ff}
+  label.chk{display:flex;align-items:center;gap:7px;font-size:11px;color:#c6ccda;cursor:pointer;padding:3px 0;width:100%}
+  label.chk input{accent-color:var(--acc);margin:0}
+  #bmWrap{flex:1;overflow:auto;min-height:0;border-top:1px solid var(--line)}
+  #bmWrap::-webkit-scrollbar{width:8px}
+  #bmWrap::-webkit-scrollbar-thumb{background:#2b3140;border-radius:4px}
+  .bmrow{display:flex;gap:7px;padding:4px 15px;font-size:11px;line-height:1.35;cursor:pointer;border-left:2px solid transparent}
+  .bmrow:hover{background:#1d222b}
+  .bmrow.sel{background:rgba(78,161,255,.12);border-left-color:var(--acc)}
+  .bmrow[hidden]{display:none!important}
+  .bmrow .code{color:#5f6779;font-family:ui-monospace,Consolas,monospace;font-size:9.5px;min-width:36px;padding-top:1px}
+  .bmrow .nm{flex:1;min-width:0}
+  .bmrow .nm b{font-weight:500}
+  .bmrow .nm span{display:block;color:var(--dim);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bmrow .q{color:var(--acc2);font-variant-numeric:tabular-nums}
+
+  #hud{position:absolute;z-index:5;top:14px;right:14px;width:262px;background:rgba(20,23,29,.93);
+    border:1px solid var(--line);border-radius:9px;font-size:11px;line-height:1.65;
+    backdrop-filter:blur(10px);pointer-events:none;max-height:calc(100% - 28px);display:flex;flex-direction:column;overflow:hidden}
+  #hud[hidden]{display:none}
+  #hudHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;
+    padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);pointer-events:auto}
+  #hudHeader strong{font-size:11px;font-weight:600}
+  #hudContent{padding:11px 13px;overflow:auto;min-height:0;overscroll-behavior:contain;pointer-events:auto}
+  #hudClose{white-space:nowrap}
+  #hud .k{color:var(--dim);display:inline-block;min-width:60px}
+  #hud .h{font-size:12.5px;font-weight:600;color:var(--acc);margin-bottom:5px}
+  #hud .foot{margin-top:7px;padding-top:7px;border-top:1px solid var(--line);color:#5f6779;font-size:10px}
+  #tips{position:absolute;z-index:5;left:288px;bottom:11px;font-size:10.5px;color:#525a6b;pointer-events:none}
+  #load{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    background:#0b0d11;color:var(--dim);font-size:12px;flex-direction:column;gap:12px}
+  #load .bar{width:200px;height:2px;background:#222834;overflow:hidden;border-radius:2px}
+  #load .bar i{display:block;height:100%;width:35%;background:var(--acc);animation:sl 1.1s infinite ease-in-out}
+  @keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(330%)}}
+  .hint{color:#5f6779;font-size:10px;line-height:1.5;margin-top:5px}
+  select{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:3px 5px;font-size:11px;width:100%}
+  #calibrationPanel{pointer-events:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:9px;color:var(--txt)}
+  #manufacturingPanel{pointer-events:auto;border-top:1px solid var(--line);padding-top:8px}#manufacturingPanel label{display:block;margin:7px 0;color:#bbc5d6}#manufacturingPanel .hint{color:#a8b5c8}#manufacturingPanel button:disabled{opacity:.45;cursor:default}
+  #calibrationPanel input[type=number]{width:100%;background:var(--panel2);color:var(--txt);border:1px solid #465066;border-radius:4px;padding:5px;font:12px Consolas,monospace}
+  .calgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:7px 0}.calgrid label{font-size:10px;color:#bbc5d6}
+  #calStatus{color:#ffcf74;margin-top:7px;white-space:pre-wrap}#calRaw,#calCurrent{font-size:10px;overflow-wrap:anywhere;margin:6px 0;color:#a8b5c8}
+  #calibrationPanel button:disabled{opacity:.45;cursor:default}
+  .calmove{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:7px 0;align-items:center;text-align:center}.calmove button{font-size:16px;touch-action:none;user-select:none}.calmove small{color:var(--dim)}
+  #refSearch{flex:1;min-width:0;background:var(--panel2);color:var(--txt);border:1px solid #465066;border-radius:5px;padding:6px;font-size:12px}
+  #refStatus{color:#ffcf74;font-size:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+  #assemblyPanel{pointer-events:auto;border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+  #assemblyPanel input{width:100%;background:var(--panel2);color:var(--txt);border:1px solid #465066;border-radius:4px;padding:5px}
+  #assemblyStatus{white-space:pre-wrap;color:#ffcf74;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="side">
+    <h1>GK7205V10_MB_V01_RA</h1>
+    <div class="sub">PCBA 3D · 单板 38 × 38 × 1.6 mm<br>
+      242 个实装器件 + 1 件 Sensor 保护膜<br>
+      45 个 NC · 3 个测试点 · BOM 已核对</div>
+
+    <div class="sec">
+      <div class="t">视图</div>
+      <div class="row">
+        <button id="vTop">顶面</button>
+        <button id="vBot">底面</button>
+        <button id="vIso">等轴</button>
+        <button id="vFit">全板</button>
+      </div>
+      <div class="row">
+        <button id="vExplode">爆炸</button>
+        <button id="vReset">重置</button>
+        <button id="vPanel" type="button" aria-controls="hud" aria-expanded="true" title="展开或收起右侧器件、校准与 DFM 面板">器件 / 校准</button>
+      </div>
+      <div class="row">
+        <button id="saveTop">导出顶面图</button>
+        <button id="saveBottom">导出底面图</button>
+        <button id="saveIso">导出等轴图</button>
+      </div>
+      <a id="exportResult" hidden style="color:#8dc1ff" download>保存已生成的图片</a>
+    </div>
+
+    <div class="sec">
+      <div class="t">显示</div>
+      <label class="chk"><input type="checkbox" id="cComp" checked> 元器件</label>
+      <label class="chk"><input type="checkbox" id="cFilm" checked> Sensor 保护膜</label>
+      <label class="chk"><input type="checkbox" id="cPad"> 焊盘立体凸起</label>
+      <label class="chk"><input type="checkbox" id="cTag"> 位号浮标</label>
+    </div>
+
+    <div class="sec">
+      <div class="t">查找与核对</div>
+      <form id="refSearchForm" class="row"><input id="refSearch" aria-label="查找位号" placeholder="输入位号，如 R43" list="refSuggestions" autocomplete="off"><button type="submit">定位</button></form>
+      <datalist id="refSuggestions"></datalist><div id="refStatus" role="status">输入完整位号，自动翻面、高亮并放大；“全板”恢复。</div>
+      <div class="row" style="margin-top:7px"><button id="vDFM" type="button">坐标 / DFM</button><button id="vAssembly" type="button">贴装数量</button></div>
+    </div>
+    <details id="pendingSection" class="sec" hidden><summary id="pendingTitle">待处理器件</summary><div id="pendingList" style="font-size:11px;line-height:1.8;max-height:220px;overflow:auto"></div></details>
+    <div class="sec" style="padding-bottom:7px">
+      <div class="t">BOM · <span id="bmCount"></span></div>
+      <div style="font-size:11px;color:#a8b5c8;margin:7px 0">选 BOM 找板上位置；点板上器件找 BOM。顶 / 底面只高亮本面，方便手工贴片。</div>
+      <input id="bomFilter" type="search" aria-label="BOM 找料" placeholder="找物料：0.1uF、型号、封装或位号" style="width:100%;box-sizing:border-box;margin:0 0 7px;background:var(--panel2);color:var(--txt);border:1px solid #465066;border-radius:5px;padding:6px;font-size:12px">
+      <div id="bomFilterStatus" role="status" style="font-size:11px;color:#a8b5c8;margin-bottom:7px"></div>
+      <button id="clearHighlight" style="font-size:11px">取消高亮</button>
+      <div id="selectionStatus" role="status" style="font-size:11px;color:#ffcf74;margin-top:7px"></div>
+      <div id="selectedMaterial" style="font-size:11px;line-height:1.7;overflow-wrap:anywhere;max-height:125px;overflow:auto;margin-top:5px"></div>
+    </div>
+    <div id="bmWrap"></div>
+  </div>
+
+  <div id="view"></div>
+  <div id="hud">
+    <div id="hudHeader"><strong>器件 / 校准 / DFM</strong><button id="hudClose" type="button" aria-label="收起器件面板" title="收起后从左侧“器件 / 校准”重新展开">收起 ×</button></div>
+    <div id="hudContent">
+    <div class="h">点击器件查看</div>
+    <div id="hudBody" style="color:#858da0">在场景中单击任意元件</div>
+    <details id="calibrationPanel" open>
+      <summary>器件位置校准</summary>
+      <label>选择位号<select id="calRef" aria-label="校准位号"><option value="">点击器件，或选择位号</option></select></label>
+      <div id="calRaw"></div>
+      <div class="calgrid">
+        <label>X 偏移 mm<input id="calDx" aria-label="X 偏移 mm" type="number" step="0.1" min="-100" max="100" value="0" disabled></label>
+        <label>Y 偏移 mm<input id="calDy" aria-label="Y 偏移 mm" type="number" step="0.1" min="-100" max="100" value="0" disabled></label>
+        <label>离板高度 mm<input id="calDz" aria-label="离板高度 mm" type="number" step="0.1" min="-50" max="50" value="0" disabled></label>
+        <label>旋转修正 °<input id="calYaw" aria-label="旋转修正 °" type="number" step="1" min="-3600" max="3600" value="0" disabled></label>
+      </div>
+      <div role="group" aria-label="器件旋转">
+        <div class="row"><button id="calRotateCCW90" disabled>↶ 逆时针 90°</button><button id="calRotateCW90" disabled>↷ 顺时针 90°</button><button id="calRotate180" disabled>旋转 180°</button></div>
+        <label>旋转微调步长 °<input id="calRotateStep" aria-label="旋转微调步长 °" type="number" min="0.01" max="180" step="any" value="1"></label>
+        <div class="row" style="margin-top:6px"><button id="calRotateCCW" disabled>↶ 逆时针微调</button><button id="calRotateCW" disabled>↷ 顺时针微调</button><button id="calRotateZero" disabled>清零旋转</button></div>
+        <div class="hint">方向从当前器件所在面看；绕当前模型原点旋转。微调可长按，X/Y 和离板高度保持不变。</div>
+      </div>
+      <div class="calgrid">
+        <label>微调步长 mm<input id="calFine" aria-label="微调步长 mm" type="number" min="0.001" max="100" step="any" value="0.01"></label>
+        <label>粗调步长 mm<input id="calCoarse" aria-label="粗调步长 mm" type="number" min="0.001" max="100" step="any" value="1"></label>
+      </div>
+      <label>当前移动步长<select id="calMoveMode" aria-label="当前移动步长"><option value="fine">微调</option><option value="coarse">粗调</option></select></label>
+      <div class="calmove" role="group" aria-label="板坐标方向移动">
+        <span></span><button id="calUp" aria-label="向上 +Y" disabled>↑</button><span></span>
+        <button id="calLeft" aria-label="向左 -X" disabled>←</button><small>板坐标 X/Y</small><button id="calRight" aria-label="向右 +X" disabled>→</button>
+        <span></span><button id="calDown" aria-label="向下 -Y" disabled>↓</button><span></span>
+      </div>
+      <div class="hint">按住按钮连续移动；面板内 Alt＋方向键移动，Alt＋Shift＋方向键使用粗调。方向以板顶视坐标为准。</div>
+      <div class="hint">X/Y 按板顶视坐标；旋转正值为从顶面看逆时针。高度正值向板外（底面向下）。原始 XY 保留。</div>
+      <label class="chk"><input type="checkbox" id="calOrigins" checked>显示 XY / 模型原点</label>
+      <div id="calCurrent"></div>
+      <label>捕捉起点<select id="calSnapMode" aria-label="捕捉起点"><option value="point">点选引脚位置（原方式）</option><option value="pin-center">引脚几何中心</option><option value="origin">模型原点</option></select></label>
+      <div class="hint">目标吸附到本面焊盘／阻焊开窗中心。引脚中心按连通金属几何计算；复杂连通模型可用原方式。</div>
+      <div class="row"><button id="calAlign" disabled>点选引脚 → 焊盘</button><button id="calZero" disabled>清零校准</button><button id="calUndo" disabled>撤销未保存</button></div>
+      <div class="row"><button id="calSave" disabled>保存本器件</button><button id="calRule" disabled>保存为封装规则</button></div>
+      <div class="hint">封装规则从下次生成起复用，并随角度及顶底面转换。当前其他器件不受此按钮影响。</div>
+      <div class="row" style="margin-top:7px"><button id="calRemoveRule" disabled>删除此封装规则</button><button id="calExport">重新导出 STP</button></div>
+      <a id="calDownload" hidden style="color:#8dc1ff" download>下载已验证 STP</a>
+      <div id="calStatus" role="status">选择单个器件后校准；修改实时预览，保存后用于 STP。</div>
+      <label>安装类型（当前器件）<select id="calMount" aria-label="安装类型"><option value="auto">按模型自动判断</option><option value="SMT">SMT 贴片</option><option value="THT">THT 插件</option><option value="EXCLUDE">从坐标与检查中排除</option></select></label>
+    </details>
+    <details id="manufacturingPanel" style="margin-top:8px">
+      <summary>SMT 坐标 / DFM</summary>
+      <div class="hint">基于已保存的 3D 位置。默认导出本体中心；可先运行检查，点击问题定位器件。</div>
+      <label>导出定位基准<select id="mfgBasis"><option value="body">器件本体包围盒中心</option><option value="origin">3D 模型原点</option></select></label>
+      <label>坐标原点<select id="mfgOrigin"><option value="source">原始生产资料原点</option><option value="board">单板左下角</option></select></label>
+      <label>角度约定<select id="mfgAngle"><option value="board">从板顶看，逆时针为正</option><option value="face">从器件所在面看，逆时针为正</option></select></label>
+      <label><input id="mfgPartial" type="checkbox"> 仅导出已匹配器件（部分坐标）</label>
+      <div class="row"><button id="mfgCheck">运行基础 DFM 检查</button><button id="mfgExport">导出坐标及 DFM</button></div>
+      <div id="mfgStatus" role="status" class="hint">输出顶／底面 CSV、Excel、原始对照与待处理清单。</div>
+      <div id="mfgFiles" style="display:grid;gap:5px;margin-top:7px"></div>
+      <div id="mfgIssues" style="max-height:220px;overflow:auto;margin-top:7px"></div>
+      <div class="hint">检查为本体包围盒几何预警，未覆盖钢网、极性和电气规则。坐标导入设备前需核对元件库零度、底面约定及吸取点。</div>
+    </details>
+    <details id="assemblyPanel"><summary>贴装数量</summary>
+      <div class="hint">每板顶 / 底面 SMT、插件与未确认数量，辅助备料。NC / 附件不计。</div>
+      <label>生产板数<input id="quoteBoards" aria-label="生产板数" type="number" min="1" step="1" value="1"></label>
+      <div class="row"><button id="quoteCalculate">统计数量</button><button id="quoteExport">导出数量清单</button></div>
+      <div id="assemblyStatus" role="status">找器件位置请使用左侧 BOM 找料或位号定位。</div><div id="assemblyFiles"></div>
+    </details>
+    </div>
+  </div>
+  <div id="tips">左键旋转 · 右键平移 · 滚轮缩放</div>
+</div>
+
+<div id="load"><div id="loadTxt">正在载入器件模型 …</div><div class="bar"><i></i></div></div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './vendor/OrbitControls.js';
+import { RoomEnvironment } from './vendor/RoomEnvironment.js';
+import { EffectComposer } from './vendor/post/EffectComposer.js';
+import { RenderPass } from './vendor/post/RenderPass.js';
+import { SSAOPass } from './vendor/post/SSAOPass.js';
+
+/* Hiding the panel keeps its inputs, scroll position and current selection intact. */
+const hudPanel=document.getElementById('hud'),panelToggle=document.getElementById('vPanel');
+const panelPreference='pcba3d.hudCollapsed';
+function setPanelCollapsed(collapsed,persist=true){
+  hudPanel.hidden=collapsed;
+  panelToggle.setAttribute('aria-expanded',String(!collapsed));
+  panelToggle.classList.toggle('on',!collapsed);
+  if(persist){try{localStorage.setItem(panelPreference,collapsed?'1':'0');}catch{}}
+}
+let panelCollapsed=true;try{panelCollapsed=localStorage.getItem(panelPreference)!=='0';}catch{}
+setPanelCollapsed(panelCollapsed,false);
+panelToggle.onclick=()=>setPanelCollapsed(!hudPanel.hidden);
+document.getElementById('hudClose').onclick=()=>{setPanelCollapsed(true);panelToggle.focus({preventScroll:true});};
+
+/* ------------------------------------------------------------------ data */
+const ASSET_VERSION = '20261029-ref-search-assembly-v130';
+const [DATA, PADS, MODELS, ALIGN, PADFIX, POSEFIX, BOARD_GEOMETRY, CALIBRATION, ALIGNMENT_PADS, MANUFACTURING] = await Promise.all([
+  fetch('./data.json?v='+ASSET_VERSION).then(r => r.json()),
+  fetch('./pads.json').then(r => r.json()),
+  fetch('./models/models.json?v='+ASSET_VERSION).then(r => r.json()),
+  fetch('./align.json').then(r => r.json()).catch(() => ({})),
+  fetch('./padfix.json').then(r => r.json()).catch(() => ({})),
+  fetch('./posefix.json?v='+ASSET_VERSION).then(r => r.json()).catch(() => ({})),
+  fetch('./board_geometry.json').then(r => r.json()),
+  fetch('./calibration.json?v='+Date.now()).then(r=>r.ok?r.json():{items:{}}).catch(()=>({items:{}})),
+  fetch('./alignment_pads.json').then(r=>r.ok?r.json():{}).catch(()=>({})),
+  fetch('./manufacturing.json?v='+Date.now()).then(r=>r.ok?r.json():{}).catch(()=>({})),
+]);
+const [TEX_TOP,TEX_BOT,MET_TOP,MET_BOT,ROUGH_TOP,ROUGH_BOT] = await Promise.all(
+  ['board_top.png','board_bot.png','board_top_metal.png','board_bot_metal.png','board_top_rough.png','board_bot_rough.png']
+  .map(name=>new THREE.TextureLoader().loadAsync('./'+name+'?v='+ASSET_VERSION))
+);
+for(const t of [ROUGH_TOP,ROUGH_BOT]){t.flipY=false;t.colorSpace=THREE.NoColorSpace;}
+for (const t of [MET_TOP, MET_BOT]) {
+  t.flipY = false;
+  t.colorSpace = THREE.NoColorSpace;
+}
+for (const t of [TEX_TOP, TEX_BOT]) {
+  t.flipY = false;              // PNG 行序 = 板 y 由大到小，与 PlaneGeometry 的 UV 直接对应
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+}
+const B = DATA.board, PW = B.w, PH = B.h;
+const PL = DATA.placements, PANELS = DATA.panels, G = DATA.geom;
+
+const T = 1.6;          // board thickness (mm)
+const MASK = 0.03;      // soldermask coating
+const SILK = 0.012;
+
+/* ------------------------------------------------------------------ renderer / scene */
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(view.clientWidth, view.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.3;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+view.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x202731);
+
+const camera = new THREE.PerspectiveCamera(35, view.clientWidth / view.clientHeight, 1, 4000);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+scene.add(new THREE.HemisphereLight(0xdae8ff, 0x3a3f47, 0.5));
+
+const keyLight = new THREE.DirectionalLight(0xfff6e8, 3.0);
+keyLight.position.set(-60, 130, 95);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(4096, 4096);
+keyLight.shadow.bias = -0.0006;
+keyLight.shadow.normalBias = 0.02;
+keyLight.shadow.radius = 2.2;
+{
+  const c = keyLight.shadow.camera;
+  c.left = -70; c.right = 70; c.top = 70; c.bottom = -70; c.near = 20; c.far = 320;
+}
+scene.add(keyLight);
+
+const rimLight = new THREE.DirectionalLight(0xbfd6ff, 1.1);
+rimLight.position.set(105, 60, -85);
+scene.add(rimLight);
+
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+fillLight.position.set(30, 40, -90);
+scene.add(fillLight);
+
+// bottom-side illumination so the reverse of the panel reads as a real board
+const underKey = new THREE.DirectionalLight(0xfff4e6, 3.0);
+underKey.position.set(30, -120, 70);
+scene.add(underKey);
+const underFill = new THREE.DirectionalLight(0xd6e4ff, 1.9);
+underFill.position.set(-80, -100, -60);
+scene.add(underFill);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.075;
+controls.minDistance = 6;
+controls.maxDistance = 600;
+
+/* ------------------------------------------------------------------ materials */
+const mat = (o) => new THREE.MeshStandardMaterial(o);
+const M = {
+  fr4:  mat({ color: 0x867b50, roughness: 0.82, metalness: 0.0 }),
+  surfTop: new THREE.MeshPhysicalMaterial({ map: TEX_TOP, metalnessMap: MET_TOP, roughnessMap: ROUGH_TOP,
+          metalness: 1.0, roughness: 1.0, clearcoat: 0.16, clearcoatRoughness: 0.42 }),
+  surfBot: new THREE.MeshPhysicalMaterial({ map: TEX_BOT, metalnessMap: MET_BOT, roughnessMap: ROUGH_BOT,
+          metalness: 1.0, roughness: 1.0, clearcoat: 0.16, clearcoatRoughness: 0.42 }),
+  mask: new THREE.MeshPhysicalMaterial({ color: 0x0b6b3b, roughness: 0.46, metalness: 0.1,
+          clearcoat: 0.16, clearcoatRoughness: 0.42 }),
+  silk: mat({ color: 0xf2f4f0, roughness: 0.85, metalness: 0.0 }),
+  pad:  new THREE.MeshPhysicalMaterial({ color: 0xb8bfc8, roughness: 0.3, metalness: 0.9,
+          clearcoat: 0.5, clearcoatRoughness: 0.2 }),
+  hole: mat({ color: 0x635a3d, roughness: 0.9, metalness: 0.0, side: THREE.DoubleSide }),
+  maskPlug: new THREE.MeshPhysicalMaterial({ color: 0x083d22, roughness: 0.5, metalness: 0.12,
+          clearcoat: 0.3, clearcoatRoughness: 0.35 }),
+  barrel: mat({ color: 0x9aa2ab, roughness: 0.4, metalness: 0.85, side: THREE.DoubleSide }),
+  KiCad: {
+    'PIN-01':            mat({ color: 0xd0d5db, roughness: 0.3, metalness: 0.9 }),
+    'PIN-02':            mat({ color: 0xd0d5db, roughness: 0.3, metalness: 0.9 }),
+    'IC-BODY-EPOXY-04':  mat({ color: 0x1a1c21, roughness: 0.52, metalness: 0.12 }),
+    'IC-LABEL-01':       mat({ color: 0x2a2d33, roughness: 0.62, metalness: 0.1 }),
+    'RES-SMD-01':        mat({ color: 0x15171b, roughness: 0.45, metalness: 0.15 }),
+    'CAP-CERAMIC-06':    mat({ color: 0xb8864f, roughness: 0.6, metalness: 0.08 }),
+    'CAP-CERAMIC-05':    mat({ color: 0xb8864f, roughness: 0.6, metalness: 0.08 }),
+    'PLASTIC-WHITE-01':  mat({ color: 0xe9e7dc, roughness: 0.62, metalness: 0.02 }),
+    'PLASTIC-BLACK-01':  mat({ color: 0x1e2024, roughness: 0.7, metalness: 0.05 }),
+    'PLASTIC-GREEN-01':  mat({ color: 0xd8e6d8, roughness: 0.45, metalness: 0.05 }),
+    'BOARD-BLACK-03':    mat({ color: 0x191b1f, roughness: 0.55, metalness: 0.1 }),
+    'FERRITE-01':        mat({ color: 0x35383b, roughness: 0.78, metalness: 0.02 }),
+    'FERRITE-DARK-01':   mat({ color: 0x242627, roughness: 0.76, metalness: 0.02 }),
+    'MOLDED-GRAY':       mat({ color: 0x626363, roughness: 0.83, metalness: 0.01 }),
+    'CORE-GRAY':         mat({ color: 0x303333, roughness: 0.86, metalness: 0.01 }),
+    'MARK-GRAY':         mat({ color: 0x929792, roughness: 0.9, metalness: 0 }),
+    'MARK-DARK':         mat({ color: 0x2b2c2a, roughness: 0.9, metalness: 0 }),
+    'SENSOR-SILICON':    mat({ color: 0x29232f, roughness: 0.32, metalness: 0.30 }),
+    'SENSOR-RIM':        mat({ color: 0x34343b, roughness: 0.5, metalness: 0.12 }),
+    'SENSOR-ACTIVE':     mat({ color: 0x403347, roughness: 0.20, metalness: 0.42 }),
+    'SENSOR-BOND':       mat({ color: 0xad9c68, roughness: 0.4, metalness: 0.68 }),
+    'SENSOR-GLASS':      new THREE.MeshPhysicalMaterial({ color: 0xc9d6df, transparent: true, opacity: 0.14, roughness: 0.23, metalness: 0, clearcoat: 0.5, depthWrite: false }),
+    'SENSOR-FILM':       mat({ color: 0x8ca8ba, transparent: true, opacity: 0.27, roughness: 0.35, metalness: 0, depthWrite: false }),
+  },
+  select: mat({ color: 0x4ea1ff, roughness: 0.3, metalness: 0.1, transparent: true, opacity: 0.3,
+                emissive: 0x1e5fbf, emissiveIntensity: 0.6, depthWrite: false }),
+};
+for (const m of Object.values(M.KiCad)) m.side = THREE.DoubleSide;
+for(const model of Object.values(MODELS))for(const [name,rgb] of Object.entries(model.materials||{})){
+  if(!M.KiCad[name] && Array.isArray(rgb) && rgb.length===3 && rgb.every(v=>Number.isFinite(v)&&v>=0&&v<=1))
+    M.KiCad[name]=mat({color:new THREE.Color(...rgb),roughness:.5,metalness:.15,side:THREE.DoubleSide});
+}
+const kicadMat = (name) => M.KiCad[name] || M.KiCad['IC-BODY-EPOXY-04'];
+
+/* ------------------------------------------------------------------ geometry helpers */
+function mergeParts(parts, filterMat) {
+  const list = parts.filter(p => !filterMat || p.mat === filterMat);
+  let nv = 0, ni = 0;
+  for (const p of list) { nv += p.v.length / 3; ni += p.i.length; }
+  const pos = new Float32Array(nv * 3);
+  const idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
+  let vo = 0, io = 0;
+  for (const p of list) {
+    pos.set(p.v, vo * 3);
+    for (let k = 0; k < p.i.length; k++) idx[io + k] = p.i[k] + vo;
+    vo += p.v.length / 3; io += p.i.length;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.computeVertexNormals();
+  g.computeBoundingBox();
+  return g;
+}
+
+/* ------------------------------------------------------------------ package → model
+   Generic packages: KiCad official 3D library (IPC-7351 / vendor drawings, CC-BY-SA 4.0)
+   Board-specific parts: parametric meshes generated from datasheet dimensions       */
+const MODEL_MAP = {
+  'SR0402': 'R_0402', '0402R': 'R_0402', '0402C': 'C_0402', '0402CH': 'C_0402',
+  'SC0402': 'C_0402', '0201C': 'C_0201', 'SC0603': 'C_0603', 'SC0805': 'C_0805',
+  '1206C': 'C_1206', 'SL0402': 'L_0402', 'SL1008H': 'L_1008',
+  'SOT23': 'SOT-23', 'SOT23-5': 'SOT-23-5', 'SOT23-6': 'SOT-23-6',
+  'SOD-323': 'D_SOD323', 'sod123': 'D_SOD123', 'SOD123': 'D_SOD123',
+  'HSD0603-LED': 'LED_0603', 'HSX2-0302': 'XTAL_3215', 'HSX4-0302': 'XTAL_3225_4P',
+  'SON12-050-0302': 'DFN12_3x3',
+  'QFN92-0R35-9X9-A': 'QFN92_9x9',
+  'GC4693-CSP35': 'GC4693_C35YA',
+  'WSON8-MX25L12835ZN-AAA': 'WSON8_8x6',
+  'H1102NL': 'H1102NL_official',
+  'A1251AWR-2-F2MA': 'CONN_125_2',
+  'A1251AWR-6-F2MA': 'CONN_125_6',
+  'A1251AWR-12-F2MA': 'CONN_125_12',
+  'SIP8-1_25S': 'HDR_125_8',
+  'SIP11-1_25S': 'HDR_125_11',
+  'SPL0404L': 'IND_NR4030',
+  'SHC0402': 'IND_SHC',
+  'SENSOR-FILM-7X5': 'SENSOR_FILM_7x5',
+};
+/* Reference-specific models (connector bodies are extruded from the exact bottom silk outline). */
+const MODEL_BY_REF = { J1: 'CONN_J1', J12: 'CONN_J12', J2: 'CONN_J2', J5: 'CONN_J5', J3: 'CONN_J3', L4: 'IND_SPH252012' };
+function modelKey(p) {
+  if (MODEL_BY_REF[p.ref]) return MODEL_BY_REF[p.ref];
+  if (MODEL_MAP[p.pkg]) return MODEL_MAP[p.pkg];
+  const q = (p.pkg || '').toUpperCase();
+  if (q.includes('0201')) return 'C_0201';
+  if (q.includes('0402')) return 'C_0402';
+  if (q.includes('0603')) return 'C_0603';
+  if (q.includes('0805')) return 'C_0805';
+  if (q.includes('1206')) return 'C_1206';
+  return 'R_0402';
+}
+
+const modelGroups = {};
+for (const [key, m] of Object.entries(MODELS)) {
+  const mats = [...new Set(m.parts.map(p => p.mat))];
+  modelGroups[key] = mats.map(mn => ({ matName: mn, geo: mergeParts(m.parts, mn) }));
+}
+
+/* ------------------------------------------------------------------ board body */
+const boardRoot = new THREE.Group();
+scene.add(boardRoot);
+
+let boardShape = null;
+for (const o of G.outline_a) {
+  if (!o.closed || o.pts.length < 3) continue;
+  const xs = o.pts.map(p => p[0]), ys = o.pts.map(p => p[1]);
+  const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+  if (w > 37.5 && h > 37.5 && w < 38.5 && Math.min(...xs) > -2 && Math.max(...ys) < PH + 2) {
+    const s = new THREE.Shape();
+    s.moveTo(o.pts[0][0] - PW / 2, -(o.pts[0][1] - PH / 2));
+    for (let i = 1; i < o.pts.length; i++) s.lineTo(o.pts[i][0] - PW / 2, -(o.pts[i][1] - PH / 2));
+    s.closePath();
+    boardShape = s;
+    break;
+  }
+}
+
+// Source 14panel.art: four I/J=3937 inch-1e-5 arcs, R=0.999998 mm.
+// Use the manufactured outside contour rather than the square DXF envelope.
+{
+  const s=new THREE.Shape();
+  if (BOARD_GEOMETRY.outline?.length >= 3) {
+    const pts=BOARD_GEOMETRY.outline;
+    s.moveTo(pts[0][0]-PW/2,-(pts[0][1]-PH/2));
+    for (const [x,y] of pts.slice(1)) s.lineTo(x-PW/2,-(y-PH/2));
+  } else {
+  const r=Math.min(BOARD_GEOMETRY.corner_radius_mm||0,PW/2,PH/2);
+  if (r>0) {
+  s.moveTo(-PW/2+r,-PH/2);s.lineTo(PW/2-r,-PH/2);
+  s.absarc(PW/2-r,-PH/2+r,r,-Math.PI/2,0,false);
+  s.lineTo(PW/2,PH/2-r);s.absarc(PW/2-r,PH/2-r,r,0,Math.PI/2,false);
+  s.lineTo(-PW/2+r,PH/2);s.absarc(-PW/2+r,PH/2-r,r,Math.PI/2,Math.PI,false);
+  s.lineTo(-PW/2,-PH/2+r);s.absarc(-PW/2+r,-PH/2+r,r,Math.PI,Math.PI*1.5,false);
+  } else {
+    s.moveTo(-PW/2,-PH/2);s.lineTo(PW/2,-PH/2);s.lineTo(PW/2,PH/2);s.lineTo(-PW/2,PH/2);
+  }
+  }
+  s.closePath();boardShape=s;
+}
+
+// Drill the physical board and both face meshes, instead of painting opaque discs.
+const BOARD_DRILLS=[];
+const drillKeys=new Set();
+const ALL_DRILL_DIAMETERS=BOARD_GEOMETRY.include_all_drill_diameters===true;
+for(const {x,y,d,plated} of BOARD_GEOMETRY.round_holes){
+  const key=x.toFixed(3)+','+y.toFixed(3);
+  if(!(d>0)||(!ALL_DRILL_DIAMETERS&&(d<.40||d>3))||x-d/2<0||x+d/2>PW||y-d/2<0||y+d/2>PH||drillKeys.has(key))continue;
+  drillKeys.add(key);BOARD_DRILLS.push({x,y,d,plated});
+  const path=new THREE.Path();
+  path.absarc(x-PW/2,-(y-PH/2),d/2,0,Math.PI*2,true);
+  boardShape.holes.push(path);
+}
+for(const pts of BOARD_GEOMETRY.routed_slots){
+  const path=new THREE.Path();
+  path.moveTo(pts[0][0]-PW/2,-(pts[0][1]-PH/2));
+  for(const [x,y] of pts.slice(1))path.lineTo(x-PW/2,-(y-PH/2));
+  path.closePath();boardShape.holes.push(path);
+}
+
+function makePanelBody(detail) {
+  const g = new THREE.Group();
+  if (!boardShape) return g;
+  // FR-4 core
+  const coreGeo = new THREE.ExtrudeGeometry(boardShape, { depth: T, bevelEnabled: false, curveSegments: 16 });
+  coreGeo.rotateX(Math.PI / 2);
+  coreGeo.translate(0, T, 0);
+  const core = new THREE.Mesh(coreGeo, M.fr4);
+  core.castShadow = true; core.receiveShadow = true;
+  g.add(core);
+
+  // soldermask on both faces
+  for (const yy of [T, -MASK]) {
+    const mg = new THREE.ExtrudeGeometry(boardShape, { depth: MASK, bevelEnabled: false, curveSegments: 16 });
+    mg.rotateX(Math.PI / 2);
+    mg.translate(0, yy + MASK, 0);
+    const m = new THREE.Mesh(mg, M.mask);
+    m.receiveShadow = true;
+    g.add(m);
+  }
+
+  // Gerber 生成的板面纹理：焊盘 / 丝印 / 字符全部来自生产文件，天然与板对齐
+  {
+    // 用板形本身生成贴图网格（含倒角），UV 归一化到 0..1 => 丝印/焊盘与板轮廓严格对齐
+    const sg = new THREE.ShapeGeometry(boardShape,16);
+    const pos = sg.attributes.position;
+    const uv = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i++) {
+      uv[i * 2] = pos.getX(i) / PW + 0.5;
+      uv[i * 2 + 1] = pos.getY(i) / PH + 0.5;
+    }
+    sg.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+
+    const sgt=sg.clone();
+    const ti=sgt.index.array;
+    for(let i=0;i<ti.length;i+=3){const a=ti[i+1];ti[i+1]=ti[i+2];ti[i+2]=a;}
+    sgt.computeVertexNormals();
+    const top = new THREE.Mesh(sgt, M.surfTop);
+    top.rotation.x = Math.PI / 2;
+    top.position.y = T + MASK + 0.002;
+    top.receiveShadow = true;
+    g.add(top);
+
+    // Both faces use the same physical board frame and PNG UVs.
+    const sgb = sg.clone();
+    const bot = new THREE.Mesh(sgb, M.surfBot);
+    bot.rotation.x = Math.PI / 2;
+    bot.position.y = -MASK - 0.002;
+    bot.receiveShadow = true;
+    g.add(bot);
+    g.userData.surfaces = [top, bot];
+  }
+
+  if (!detail) return g;
+
+  /* Physical hole walls; face holes are already cut out above. */
+  for(const {x,y,d,plated} of BOARD_DRILLS){
+    const bore=new THREE.Mesh(new THREE.CylinderGeometry(d/2,d/2,T,40,1,true),plated?M.barrel:M.hole);
+    bore.position.set(x-PW/2,T/2,-(y-PH/2));g.add(bore);
+  }
+  return g;
+}
+
+/* silkscreen: 0.11 mm printed strokes, built as explicit quads (no shape filling) */
+function makeSilkLayer(arr, yTop) {
+  const inBox = pts => {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    return Math.min(...xs) >= -0.2 && Math.max(...xs) <= PW + 0.2 &&
+           Math.min(...ys) >= -0.2 && Math.max(...ys) <= PH + 0.2;
+  };
+  const stroke = 0.11;
+  const pos = [], idx = [];
+  let n = 0;
+  const quad = (x1, y1, x2, y2) => {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    if (len < 0.012) return;
+    const nx = -dy / len * stroke / 2, ny = dx / len * stroke / 2;
+    const ax = x1 - PW / 2, ay = -(y1 - PH / 2);
+    const bx = x2 - PW / 2, by = -(y2 - PH / 2);
+    pos.push(
+      ax + nx, yTop, ay + ny,
+      bx + nx, yTop, by + ny,
+      bx - nx, yTop, by - ny,
+      ax - nx, yTop, ay - ny
+    );
+    idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
+    n += 4;
+  };
+  for (const it of arr) {
+    if (!inBox(it.pts)) continue;
+    const pts = it.pts;
+    if (pts.length < 2) continue;
+    if (!it.closed || pts.length === 2) {
+      for (let i = 0; i + 1 < pts.length; i++) quad(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+    } else {
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length];
+        quad(a[0], a[1], b[0], b[1]);
+      }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    color: 0xf2f4f0, roughness: 0.85, metalness: 0, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  }));
+  mesh.receiveShadow = true;
+  const grp = new THREE.Group();
+  grp.add(mesh);
+  return grp;
+}
+
+/* copper pads from soldermask openings */
+const DRILLS = BOARD_GEOMETRY.round_holes;
+function isTentedVia(x, y, w) {
+  for (const h of DRILLS) {
+    if (Math.abs(h.x - x) < 0.16 && Math.abs(h.y - y) < 0.16 && Math.abs(h.d - w) < 0.5) return true;
+  }
+  return false;
+}
+
+function makePads() {
+  const grp = new THREE.Group();
+  const mm = new THREE.Matrix4();
+  for (const side of ['top', 'bottom']) {
+    const y = side === 'top' ? T + MASK + 0.002 : -MASK - 0.002;
+    const disc = [], rect = [];
+    for (const [x, yy, w, h, t] of PADS[side]) {
+      if (w > 3.5 || h > 3.5) continue;
+      if (!(x > 0.1 && x < PW - 0.1 && yy > 0.1 && yy < PH - 0.1)) continue;
+      // 制板说明 3.11「所有过孔黑油塞孔」：与钻孔同心的圆形开口是过孔开窗，黑油塞孔后不显示
+      if ((t === 'C' || t === 'MACRO') && w <= 1.6 && isTentedVia(x, yy, w)) continue;
+      if (t === 'C' || t === 'MACRO') disc.push([x, yy, w]);
+      else rect.push([x, yy, w, h]);
+    }
+    if (disc.length) {
+      const im = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 12), M.pad, disc.length);
+      disc.forEach(([x, yy, w], i) => {
+        mm.makeScale(w, 0.016, w);
+        mm.setPosition(x - PW / 2, y, -(yy - PH / 2));
+        im.setMatrixAt(i, mm);
+      });
+      im.receiveShadow = true;
+      grp.add(im);
+    }
+    if (rect.length) {
+      const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), M.pad, rect.length);
+      rect.forEach(([x, yy, w, h], i) => {
+        mm.makeScale(w, 0.016, h);
+        mm.setPosition(x - PW / 2, y, -(yy - PH / 2));
+        im.setMatrixAt(i, mm);
+      });
+      im.receiveShadow = true;
+      grp.add(im);
+    }
+  }
+  return grp;
+}
+
+/* refdes text on silk (0.381 mm text) */
+function makeSilkText() {
+  const grp = new THREE.Group();
+  const mk = (txt, x, y, hgt, mirror) => {
+    const px = 64;
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.font = `600 ${px}px "Inter","Segoe UI",sans-serif`;
+    const w = Math.ceil(ctx.measureText(txt).width) + 8;
+    c.width = w; c.height = px * 1.45;
+    const g2 = c.getContext('2d');
+    g2.font = `600 ${px}px "Inter","Segoe UI",sans-serif`;
+    g2.fillStyle = '#f2f4f0';
+    g2.textBaseline = 'middle';
+    g2.fillText(txt, 4, c.height / 2);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const ml = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    const hh = (hgt || 0.381) * 1.1;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(hh * c.width / c.height, hh), ml);
+    mesh.position.set(x - PW / 2, mirror ? -MASK - 0.014 : T + MASK + 0.014, -(y - PH / 2));
+    mesh.rotation.x = mirror ? Math.PI / 2 : -Math.PI / 2;
+    grp.add(mesh);
+  };
+  const inBox = (x, y) => x > -1 && x < PW + 1 && y > -2 && y < PH + 2;
+  for (const t of G.text_top) if (inBox(t.x, t.y)) mk(t.t, t.x, t.y, t.h, false);
+  for (const t of G.text_bot) if (inBox(t.x, t.y)) mk(t.t, t.x, t.y, t.h, true);
+  return grp;
+}
+
+/* ------------------------------------------------------------------ assemble 8 boards
+   Every panel carries the full stack-up (holes, silk, pads, components) since it is one
+   physical panel; the parts are identical on all 8 units.                              */
+const panelRoots = [];
+const detailRoot = new THREE.Group();
+boardRoot.add(detailRoot);
+const panelOffsets = [];
+const gxs = PANELS.map(p => p.x), gys = PANELS.map(p => p.y);
+const CX = (Math.min(...gxs) + Math.max(...gxs)) / 2 + PW / 2;
+const CY = (Math.min(...gys) + Math.max(...gys)) / 2 + PH / 2;
+
+const SINGLE = [PANELS[0]];      // 只展示一块单板（用户要求：不做 8 拼板）
+SINGLE.forEach((p, i) => {
+  const g = new THREE.Group();
+  g.position.set(0, 0, 0);
+  panelOffsets.push(g.position.clone());
+  g.add(makePanelBody(true));
+
+  // silk / text / pads are shared geometry, one clone per panel
+  const d = new THREE.Group();
+  // Gerber textures already contain the complete real silkscreen and text.
+  // Do not draw the reconstructed DXF strokes/text over them a second time.
+  const txt = new THREE.Group();
+  g.userData.text = txt;
+  const pads = makePads();
+  pads.visible = false;      // 默认用 Gerber 纹理里的焊盘
+  d.add(pads);
+  g.userData.pads = pads;
+  g.add(d);
+  g.userData.detail = d;
+
+  panelRoots.push(g);
+  boardRoot.add(g);
+});
+const A1POS = panelOffsets[0].clone();
+
+/* ------------------------------------------------------------------ components */
+const A1 = A1POS.clone();
+const INST = {};        // key -> [InstancedMesh]
+const byKey = {};       // key -> {top:[], bottom:[]}
+
+for (const [ref, p] of Object.entries(PL)) {
+  const k = modelKey(p);
+  byKey[k] = byKey[k] || { top: [], bottom: [] };
+  byKey[k][p.side].push({ ref, p });
+}
+
+const AL = (ref) => ({ fix: (ALIGN[ref] && ALIGN[ref].fix) || 0 });
+
+const ROT_FIX = {};
+
+/* 连接器/排座：本体必须朝板内、插口朝板外。用「指向板中心」的向量求解姿态，
+   不依赖 SYM_ROTATE 的正负约定，保证插口永远开在板边一侧。 */
+const CONN_RE = /^(CONN_|HDR_)/;
+function connectorQuat(px, py, bottom) {
+  // 插口朝向「最近的板边法线」，本体因此指向板内 —— 连接器永远贴在板边上
+  const x = px - PW / 2, z = -(py - PH / 2);
+  const dL = x + PW / 2, dR = PW / 2 - x, dB = z + PH / 2, dT = PH / 2 - z;
+  const m = Math.min(dL, dR, dB, dT);
+  let ux = 0, uz = 0;
+  if (m === dR) ux = 1; else if (m === dL) ux = -1;
+  else if (m === dT) uz = 1; else uz = -1;     // dT: 靠近 z=+PH/2（板下边）
+  const theta = bottom ? Math.atan2(-ux, uz) : Math.atan2(-ux, -uz);
+  const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), theta);
+  if (bottom) q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI));
+  return q;
+}
+
+function baseMatrixFor(p, explode = 0) {
+  const a = AL(p.ref);
+  const e = new THREE.Euler();
+  const q = new THREE.Quaternion();
+  const top = p.side === 'top';
+  const lift = explode * (top ? 1 : -1) * 6;
+  // BOM 坐标 + 用 Gerber 焊盘实测出的「封装原点差」（模型中心 vs 符号原点，仅对有完整焊盘的器件生效）
+  const pf = PADFIX[p.ref];
+  const pose = POSEFIX[p.ref] || {};
+  const px = p.x + (pf ? pf[0] : 0) + (pose.dx || 0);
+  const py = p.y + (pf ? pf[1] : 0) + (pose.dy || 0);
+  const rot = p.rot + (pose.dyaw || 0) + (ROT_FIX[modelKey(p)] || 0) + (a.fix || 0);
+  if (pose.conn) {
+    e.set(0, THREE.MathUtils.degToRad(top?-(pose.conn.yaw || 0):(pose.conn.yaw || 0)), 0, 'XYZ');
+    q.setFromEuler(e);
+    if (!top) q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI));
+    return new THREE.Matrix4().compose(
+      new THREE.Vector3(pose.conn.cx - PW / 2, (top ? T + MASK : -MASK) + (top ? 1 : -1) * lift,
+                        -(pose.conn.cy - PH / 2)),
+      q, new THREE.Vector3(1, 1, 1));
+  }
+  const isConn = CONN_RE.test(modelKey(p));
+  if (isConn) {
+    q.copy(connectorQuat(px, py, !top));
+    return new THREE.Matrix4().compose(
+      new THREE.Vector3(px - PW / 2, (top ? T + MASK : -MASK) + (top ? 1 : -1) * lift, -(py - PH / 2)),
+      q, new THREE.Vector3(1, 1, 1));
+  }
+  if (top) {
+    e.set(0, THREE.MathUtils.degToRad(rot), 0, 'XYZ');
+    q.setFromEuler(e);
+    return new THREE.Matrix4().compose(
+      new THREE.Vector3(px - PW / 2, T + MASK + lift, -(py - PH / 2)), q, new THREE.Vector3(1, 1, 1));
+  }
+  // Rx(pi) * Ry(-yaw): board contact offsets become
+  // (cos(yaw)*x - sin(yaw)*z, sin(yaw)*x + cos(yaw)*z),
+  // matching the bottom contact frame used by the Gerber pose solver.
+  e.set(Math.PI, -THREE.MathUtils.degToRad(rot), 0, 'XYZ');
+  q.setFromEuler(e);
+  return new THREE.Matrix4().compose(
+    new THREE.Vector3(px - PW / 2, -MASK - lift, -(py - PH / 2)), q, new THREE.Vector3(1, 1, 1));
+}
+
+function matrixFor(p,explode=0){
+  const m=baseMatrixFor(p,explode),v=CALIBRATION.items[p.ref];if(!v)return m;
+  const position=new THREE.Vector3(),q=new THREE.Quaternion(),scale=new THREE.Vector3();m.decompose(position,q,scale);
+  position.x+=v.dx||0;position.z-=v.dy||0;position.y+=(p.side==='top'?1:-1)*(v.dz||0);
+  q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),THREE.MathUtils.degToRad(v.dyaw||0)));
+  return m.compose(position,q,scale);
+}
+CALIBRATION.items ||= {};
+
+const instanceLookup = new Map();   // mesh.uuid + ':' + i -> ref
+
+for (const [key, sides] of Object.entries(byKey)) {
+  const parts = modelGroups[key];
+  if (!parts) continue;
+  for (const side of ['top', 'bottom']) {
+    const list = sides[side];
+    if (!list.length) continue;
+    for (const part of parts) {
+      const total = list.length * panelOffsets.length;
+      const im = new THREE.InstancedMesh(part.geo, kicadMat(part.matName), total);
+      im.castShadow = true;
+      im.receiveShadow = true;
+      im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      let n = 0;
+      for (const off of panelOffsets) {
+        list.forEach((it) => {
+          const m = matrixFor(it.p);
+          m.elements[12] += off.x;
+          m.elements[14] += off.z;
+          im.setMatrixAt(n, m);
+          instanceLookup.set(im.uuid + ':' + n, it.ref);
+          n++;
+        });
+      }
+      im.userData = { side, key, list, materialName:part.matName };
+      im.frustumCulled = false;
+      detailRoot.add(im);
+      (INST[key] = INST[key] || []).push(im);
+    }
+  }
+}
+boardRoot.add(detailRoot);
+
+/* refdes callouts */
+const tags = new THREE.Group();
+function textSprite(text, color) {
+  const px = 44, pad = 8;
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  ctx.font = `600 ${px}px Inter, "Segoe UI", sans-serif`;
+  const w = Math.ceil(ctx.measureText(text).width) + pad * 2;
+  c.width = w; c.height = px + pad * 2;
+  const g = c.getContext('2d');
+  g.font = `600 ${px}px Inter, "Segoe UI", sans-serif`;
+  g.fillStyle = 'rgba(8,10,14,.75)';
+  g.beginPath(); g.roundRect(0, 0, c.width, c.height, 7); g.fill();
+  g.fillStyle = color; g.textBaseline = 'middle';
+  g.fillText(text, pad, c.height / 2 + 1);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  sp.scale.set(c.width / c.height * 1.0, 1.0, 1);
+  sp.renderOrder = 30;
+  return sp;
+}
+const KEYREFS = ['U11', 'U1', 'U3', 'U2', 'U12', 'U13', 'U10', 'U17', 'T2', 'J1', 'J2', 'J3', 'J5', 'J12', 'X4', 'X1', 'D2', 'L3'];
+for (const ref of KEYREFS) {
+  const p = PL[ref];
+  if (!p) continue;
+  const sp = textSprite(ref, p.side === 'top' ? '#cfe6ff' : '#ffd79a');
+  sp.position.set(p.x - PW / 2, p.side === 'top' ? T + 6 : -6, -(p.y - PH / 2));
+  sp.userData.side=p.side;
+  tags.add(sp);
+}
+tags.position.copy(A1POS);
+tags.visible = false;
+detailRoot.add(tags);
+
+/* ------------------------------------------------------------------ interaction */
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const selectionRoot = new THREE.Group(); detailRoot.add(selectionRoot);
+const selectionGeometry = new THREE.BoxGeometry(1,1,1);
+const selectionEdges = new THREE.EdgesGeometry(selectionGeometry);
+const selectionMaterial = new THREE.MeshBasicMaterial({color:0xffb52f,transparent:true,opacity:.24,depthTest:false,depthWrite:false});
+const selectionLineMaterial = new THREE.LineBasicMaterial({color:0xffc34a,depthTest:false,transparent:true,opacity:.95,depthWrite:false});
+let selectedRefs = [], selectedBomRow = null, componentSide = 'all';
+const hudBody = document.getElementById('hudBody');
+function escapeHTML(value) {
+  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const pendingParts=DATA.pending_components||[];
+if(pendingParts.length){
+  document.getElementById('pendingSection').hidden=false;
+  document.getElementById('pendingTitle').textContent=`部分预览 · ${pendingParts.length} 个待处理器件`;
+  document.getElementById('pendingList').textContent=pendingParts.map(p=>`${p.ref} · ${p.pkg||'无坐标'} · ${p.message}`).join('\n');
+  document.getElementById('pendingList').style.whiteSpace='pre-wrap';
+}
+
+function infoHTML(p) {
+  if (!p) return '<span style="color:#858da0">在场景中单击任意元件</span>';
+  const rows = [
+    ['面别', p.side === 'top' ? 'TOP 顶面' : 'BOTTOM 底面'],
+    ['状态', p.population === 'populated' ? '实装' : (p.population === 'accessory' ? 'BOM 附件' : (p.population || '—'))],
+    ['描述', p.desc || p.dev || '—'],
+    ['值', p.bom_val || p.val || '—'],
+    ['封装', p.pkg || '—'],
+    ['3D 模型',modelKey(p)],
+    ['物料编码', p.code || '—'],
+    ['坐标', `${p.x.toFixed(3)}, ${p.y.toFixed(3)} mm`],
+    ['旋转', `${p.rot.toFixed(0)}°`],
+    ...(p.position_source ? [['定位依据',p.position_source]] : []),
+  ];
+  return `<div class="h">${escapeHTML(p.ref)}</div>` +
+    rows.map(([k, v]) => `<div><span class="k">${escapeHTML(k)}</span>${escapeHTML(v)}</div>`).join('') +
+    `<div class="foot">坐标原点：单板左下角</div>`;
+}
+
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+  ndc.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+  ray.setFromCamera(ndc, camera);
+  const meshes = [];
+  detailRoot.traverse(o => { if (o.isInstancedMesh && o.visible) meshes.push(o); });
+  const hits = ray.intersectObjects(meshes, false);
+  for (const h of hits) {
+    const ref = instanceLookup.get(h.object.uuid + ':' + h.instanceId);
+    if (ref) return ref;
+  }
+  return null;
+}
+
+function refreshHighlights() {
+  selectionRoot.clear();
+  for (const ref of selectedRefs) {
+    const p=PL[ref]; if (!p) continue;
+    if (!componentVisible(p)) continue;
+    const box=new THREE.Box3();
+    for (const part of modelGroups[modelKey(p)] || []) box.union(part.geo.boundingBox);
+    if (box.isEmpty()) continue;
+    const centre=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()).addScalar(.18);
+    const group=new THREE.Group();group.userData={ref,side:p.side};group.matrixAutoUpdate=false;
+    group.matrix.copy(matrixFor(p,exploded?1:0)).multiply(new THREE.Matrix4().makeTranslation(centre.x,centre.y,centre.z)).multiply(new THREE.Matrix4().makeScale(size.x,size.y,size.z));
+    const fill=new THREE.Mesh(selectionGeometry,selectionMaterial);fill.renderOrder=1000;
+    const edge=new THREE.LineSegments(selectionEdges,selectionLineMaterial);edge.renderOrder=1001;
+    group.add(fill,edge);selectionRoot.add(group);
+  }
+  updateSelectionInfo();
+  calDrawOrigins();
+}
+function componentVisible(p){return (componentSide==='all'||p.side===componentSide) && document.getElementById('cComp').checked && (modelKey(p)!=='SENSOR_FILM_7x5'||document.getElementById('cFilm').checked);}
+function setSelection(refs,row=null) {
+  if(calBusy)return;
+  selectedRefs=[...new Set(refs)].filter(ref=>PL[ref]); selectedBomRow=row;
+  document.querySelectorAll('.bmrow').forEach(el=>el.classList.toggle('sel',row?el===row:selectedRefs.length===1 && el.dataset.refs.split(',').includes(selectedRefs[0])));
+  refreshHighlights();
+  syncCalibrationEditor();
+}
+function updateSelectionInfo(){
+  const row=selectedBomRow,visible=selectedRefs.filter(ref=>componentVisible(PL[ref]));
+  const top=selectedRefs.filter(ref=>PL[ref].side==='top').length,bottom=selectedRefs.length-top;
+  const scope=componentSide==='top'?'当前顶面':componentSide==='bottom'?'当前底面':'当前双面';
+  const pendingRefs=(row?.dataset.refs||'').split(',').filter(ref=>pendingParts.some(part=>part.ref===ref));
+  document.getElementById('selectionStatus').textContent=selectedRefs.length?`已选 ${selectedRefs.length} 个 · ${scope}高亮 ${visible.length} 个 · 顶 ${top} / 底 ${bottom}`:'';
+  const material=document.getElementById('selectedMaterial');
+  const match=row||(selectedRefs.length===1?[...document.querySelectorAll('.bmrow')].find(el=>el.dataset.refs.split(',').includes(selectedRefs[0])):null);
+  material.textContent=selectedRefs.length?`${match?.dataset.details||PL[selectedRefs[0]].pkg}\n本面位号：${visible.join(', ')||'本面没有，切换顶 / 底面查看'}`:'';
+  material.style.whiteSpace='pre-wrap';
+  if (!selectedRefs.length) hudBody.innerHTML=infoHTML(null);
+  else if (!row && selectedRefs.length===1) hudBody.innerHTML=infoHTML(PL[selectedRefs[0]]);
+  else hudBody.innerHTML=`<div class="h">${escapeHTML(row?.dataset.name || 'BOM 器件')}</div><div>已选 ${selectedRefs.length} 个器件（顶面 ${top}，底面 ${bottom}）</div><div>${scope}高亮 ${visible.length} 个</div><div style="margin-top:7px;max-height:140px;overflow:auto;word-break:break-word">${escapeHTML(visible.join(', ') || '当前面没有可见的所选器件')}</div><div class="foot">顶面 / 底面只显示本面器件；等轴恢复双面。切换面别保留 BOM 选择。</div>`;
+  if(pendingRefs.length){const note=document.createElement('div');note.style.color='#ffcf74';note.textContent='本行 '+pendingRefs.length+' 个尚未显示：'+pendingRefs.join(', ');hudBody.append(note);document.getElementById('selectionStatus').textContent+=' · 待处理 '+pendingRefs.length+' 个';}
+}
+function setSelected(ref) {
+  setSelection(ref?[ref]:[]);
+  const row=ref?[...document.querySelectorAll('.bmrow')].find(el=>el.dataset.refs.split(',').includes(ref)):null;
+  if(row){
+    const filter=document.getElementById('bomFilter');
+    if(row.hidden){filter.value='';filter.dispatchEvent(new Event('input'));}
+    row.scrollIntoView({block:'nearest'});
+  }
+}
+/* Calibration overlays retain the original XY and automatic pose. */
+const calEl=id=>document.getElementById(id),calFields={dx:'calDx',dy:'calDy',dz:'calDz',dyaw:'calYaw'};
+const calSaved=structuredClone(CALIBRATION.items),calDirty=new Set();
+MANUFACTURING.mount_types ||= {};
+const mountSaved=structuredClone(MANUFACTURING.mount_types),bodyCenterCache=new Map();
+let calActive='',calBusy=false,calPickStage='',calPinPoint=null,calToken=null;
+let calHoldTimer=null;
+const calPinCache=new WeakMap();
+const calRoot=new THREE.Group();detailRoot.add(calRoot);
+for(const ref of Object.keys(PL).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))){const option=document.createElement('option');option.value=ref;option.textContent=ref+' · '+PL[ref].pkg;calEl('calRef').append(option);}
+const calJobId=location.pathname.match(/^\/project\/([a-f0-9]+)\//)?.[1];
+function calMessage(text){calEl('calStatus').textContent=text;}
+function calLocks(){
+  for(const id of [...Object.values(calFields),'calMount','calSave','calRule','calZero','calUndo','calAlign','calRemoveRule','calUp','calDown','calLeft','calRight','calSnapMode','calRotateCCW90','calRotateCW90','calRotate180','calRotateCCW','calRotateCW','calRotateZero'])calEl(id).disabled=calBusy||!calActive;
+  if(calBusy||!calActive)calStopHold();
+  calEl('calRef').disabled=calBusy;
+  calEl('calExport').disabled=calBusy||!!pendingParts.length||!!calDirty.size;
+  calEl('calExport').title=pendingParts.length?'请先补齐 '+pendingParts.length+' 个待处理器件':calDirty.size?'请保存或撤销所有未保存校准':'';
+  for(const id of ['mfgCheck','mfgExport']){calEl(id).disabled=calBusy||!!calDirty.size;calEl(id).title=calDirty.size?'请先保存或撤销所有未保存调整':'';}
+}
+function syncCalibrationEditor(){
+  calStopHold();
+  calActive=selectedRefs.length===1?selectedRefs[0]:'';calPickStage='';calPinPoint=null;calEl('calRef').value=calActive;
+  const v=CALIBRATION.items[calActive]||{};for(const [key,id] of Object.entries(calFields))calEl(id).value=v[key]||0;
+  calEl('calMount').value=MANUFACTURING.mount_types[calActive]||'auto';
+  if(calActive){const p=PL[calActive],offsets=DATA.coordinate_frame?.xy_offsets_mm||[0,0];
+    calEl('calRaw').textContent=`生产 XY：${(p.x-offsets[0]).toFixed(4)}, ${(p.y-offsets[1]).toFixed(4)} mm；角度 ${p.rot}°；${p.side==='top'?'顶面':'底面'}；封装 ${p.pkg}`;
+    calMessage(calDirty.has(calActive)?'本器件有未保存校准，STP 尚未更新。':v.source==='footprint_rule'?'已应用封装规则；可继续单独校准。':'修改实时预览；保存后用于 STP。');
+  }else{calEl('calRaw').textContent='';calEl('calCurrent').textContent='';calMessage('请选择单个器件。'+(calDirty.size?`另有 ${calDirty.size} 个器件未保存。`:''));}
+  calLocks();calDrawOrigins();
+}
+function calDrawOrigins(){
+  for(const child of [...calRoot.children]){calRoot.remove(child);child.geometry?.dispose();child.material?.map?.dispose();child.material?.dispose();}
+  if(!calActive)return;const p=PL[calActive],m=matrixFor(p),modelOrigin=new THREE.Vector3().setFromMatrixPosition(m);
+  const pose=POSEFIX[p.ref]||{},baseAngle=pose.conn?-(pose.conn.yaw||0):p.rot+(pose.dyaw||0),v=CALIBRATION.items[p.ref]||{};
+  const result={x:modelOrigin.x+PW/2,y:PH/2-modelOrigin.z,z:modelOrigin.y,rotation:baseAngle+(v.dyaw||0)};
+  const bodyPoint=mfgBodyCenter(p)?.applyMatrix4(m),center=bodyPoint?{x:bodyPoint.x+PW/2,y:PH/2-bodyPoint.z}:null;
+  calEl('calCurrent').dataset.center=JSON.stringify(center);
+  calEl('calCurrent').dataset.placement=JSON.stringify(result);
+  calEl('calCurrent').textContent=`模型原点（板坐标）：X ${result.x.toFixed(4)} / Y ${result.y.toFixed(4)} / Z ${result.z.toFixed(4)} mm；${result.rotation.toFixed(2)}°。`+(center?`本体中心：X ${center.x.toFixed(4)} / Y ${center.y.toFixed(4)} mm。`:'本体中心无法计算。')+'青：生产 XY；橙：模型原点；紫：本体中心。';
+  if(!calEl('calOrigins').checked||!componentVisible(p))return;
+  const origin=new THREE.Vector3(p.x-PW/2,p.side==='top'?T+.08:-.08,-(p.y-PH/2));
+  for(const [point,colour,label] of [[origin,0x4cddff,'XY'],[modelOrigin,0xffba50,'模型'],...(bodyPoint?[[bodyPoint,0xcf91ff,'中心']]:[])]){
+    const r=.65,geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(point.x-r,point.y,point.z),new THREE.Vector3(point.x+r,point.y,point.z),new THREE.Vector3(point.x,point.y,point.z-r),new THREE.Vector3(point.x,point.y,point.z+r)]);
+    const line=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:colour,depthTest:false}));line.renderOrder=1100;calRoot.add(line);
+    const tag=textSprite(label,'#'+colour.toString(16));tag.position.copy(point).add(new THREE.Vector3(.8,(p.side==='top'?1:-1)*.3,0));tag.scale.multiplyScalar(.65);calRoot.add(tag);
+  }
+}
+function calRead(){const v={};for(const [key,id] of Object.entries(calFields)){const el=calEl(id),n=Number(el.value);if(el.value.trim()===''||!Number.isFinite(n)||n<Number(el.min)||n>Number(el.max))throw new Error('请填写范围内的有效校准值');v[key]=n;}return v;}
+function calUpdateMatrices(){
+  for(const meshes of Object.values(INST))for(const im of meshes){let n=0;for(const off of panelOffsets)for(const it of im.userData.list){const m=matrixFor(it.p,exploded?1:0);m.elements[12]+=off.x;m.elements[14]+=off.z;im.setMatrixAt(n++,m);}im.instanceMatrix.needsUpdate=true;im.computeBoundingSphere();}
+  refreshHighlights();calDrawOrigins();
+}
+function calDraft(){
+  if(!calActive||calBusy)return;try{CALIBRATION.items[calActive]={...calRead(),source:'reference'};MANUFACTURING.mount_types[calActive]=calEl('calMount').value;calDirty.add(calActive);calUpdateMatrices();calMessage(`未保存校准（共 ${calDirty.size} 个器件）；保存后才能用于 STP 和坐标。`);calEl('calDownload').hidden=true;mfgInvalidate(false);}catch(error){calMessage(error.message);}calLocks();
+}
+for(const id of Object.values(calFields))calEl(id).addEventListener('input',calDraft);
+function calStopHold(){clearTimeout(calHoldTimer);calHoldTimer=null;}
+function calStoreSteps(){try{localStorage.setItem('pcba-calibration-steps',JSON.stringify({fine:calEl('calFine').value,coarse:calEl('calCoarse').value,rotate:calEl('calRotateStep').value,mode:calEl('calMoveMode').value}));}catch{}}
+try{const saved=JSON.parse(localStorage.getItem('pcba-calibration-steps')||'{}');for(const [key,id] of [['fine','calFine'],['coarse','calCoarse'],['rotate','calRotateStep']]){const el=calEl(id),n=Number(saved[key]);if(n>=Number(el.min)&&n<=Number(el.max))el.value=n;}if(['fine','coarse'].includes(saved.mode))calEl('calMoveMode').value=saved.mode;}catch{}
+for(const id of ['calFine','calCoarse','calMoveMode','calRotateStep'])calEl(id).addEventListener('change',calStoreSteps);
+function calNudge(dx,dy,coarse=false){
+  if(!calActive||calBusy)return false;
+  try{const v=calRead(),stepEl=calEl(coarse||calEl('calMoveMode').value==='coarse'?'calCoarse':'calFine'),step=Number(stepEl.value);
+    if(!stepEl.value.trim()||!Number.isFinite(step)||step<.001||step>100)throw new Error('移动步长需在 0.001–100 mm 之间');
+    const x=Number((v.dx+dx*step).toFixed(8)),y=Number((v.dy+dy*step).toFixed(8));
+    if(Math.abs(x)>100||Math.abs(y)>100)throw new Error('X/Y 校准超出 ±100 mm 范围');
+    calPickStage='';calPinPoint=null;calEl('calDx').value=x;calEl('calDy').value=y;calDraft();calStoreSteps();return true;
+  }catch(error){calMessage(error.message);return false;}
+}
+function calBindHold(id,action){
+  const button=calEl(id);button.addEventListener('pointerdown',e=>{if(e.button!==0)return;calStopHold();button.setPointerCapture(e.pointerId);if(!action(e))return;const repeat=()=>{if(action(e))calHoldTimer=setTimeout(repeat,90);};calHoldTimer=setTimeout(repeat,350);});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,calStopHold);
+  button.addEventListener('click',e=>{if(e.detail===0)action(e);});
+}
+for(const [id,dx,dy] of [['calUp',0,1],['calDown',0,-1],['calLeft',-1,0],['calRight',1,0]])calBindHold(id,e=>calNudge(dx,dy,e.shiftKey));
+function calRotate(direction,angle=null){
+  if(!calActive||calBusy)return false;
+  try{const v=calRead(),el=calEl('calRotateStep');if(angle===null){angle=Number(el.value);if(!el.value.trim()||!Number.isFinite(angle)||angle<.01||angle>180)throw new Error('旋转微调步长需在 0.01–180° 之间');}
+    const yaw=Number((v.dyaw+direction*angle*(PL[calActive].side==='top'?1:-1)).toFixed(8));
+    if(Math.abs(yaw)>3600)throw new Error('旋转修正超出 ±3600° 范围');
+    calPickStage='';calPinPoint=null;calEl('calYaw').value=yaw;calDraft();calStoreSteps();return true;
+  }catch(error){calMessage(error.message);return false;}
+}
+calEl('calRotateCCW90').onclick=()=>calRotate(1,90);calEl('calRotateCW90').onclick=()=>calRotate(-1,90);calEl('calRotate180').onclick=()=>calRotate(1,180);
+calBindHold('calRotateCCW',()=>calRotate(1));calBindHold('calRotateCW',()=>calRotate(-1));
+calEl('calRotateZero').onclick=()=>{calStopHold();calPickStage='';calPinPoint=null;calEl('calYaw').value=0;calDraft();};
+window.addEventListener('blur',calStopHold);
+calEl('calibrationPanel').addEventListener('keydown',e=>{const d={ArrowUp:[0,1],ArrowDown:[0,-1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(e.altKey&&d){e.preventDefault();calNudge(...d,e.shiftKey);}});
+calEl('calRef').onchange=()=>{setSelected(calEl('calRef').value||null);if(calActive){if(PL[calActive].side==='top')viewTop();else viewBottom();}};
+calEl('calOrigins').onchange=calDrawOrigins;
+calEl('calZero').onclick=()=>{for(const id of Object.values(calFields))calEl(id).value=0;calDraft();};
+calEl('calUndo').onclick=()=>{if(!calActive)return;if(calSaved[calActive])CALIBRATION.items[calActive]=structuredClone(calSaved[calActive]);else delete CALIBRATION.items[calActive];if(mountSaved[calActive])MANUFACTURING.mount_types[calActive]=mountSaved[calActive];else delete MANUFACTURING.mount_types[calActive];calDirty.delete(calActive);syncCalibrationEditor();calUpdateMatrices();if(!calDirty.size)mfgRenderExport(MANUFACTURING.last_export);};
+async function calApi(path,body){
+  if(!calJobId)throw new Error('请在正在运行的工具内打开工程，再保存校准');
+  if(!calToken){const r=await fetch('/api/info');calToken=(await r.json()).token;}
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-PCBA-Token':calToken},body:JSON.stringify({id:calJobId,...body})});const data=await r.json();if(!r.ok)throw new Error(data.error||'请求失败');return data;
+}
+async function calSave(rule=false){
+  if(!calActive||calBusy)return;let v;try{v=calRead();}catch(error){calMessage(error.message);return;}
+  calBusy=true;calLocks();const ref=calActive;
+  try{const result=await calApi('/api/calibration',{ref,values:v,save_rule:rule,mount_type:calEl('calMount').value});calSaved[ref]=structuredClone(result.calibration.items[ref]);CALIBRATION.items[ref]=structuredClone(calSaved[ref]);mountSaved[ref]=result.manufacturing.mount_types[ref]||'auto';calDirty.delete(ref);calEl('calDownload').hidden=true;mfgInvalidate(true);calMessage(rule?'已保存本器件及封装规则，下次生成会复用。当前 STP 和坐标需要重新导出。':'本器件校准及安装类型已保存。当前 STP 和坐标需要重新导出。');}
+  catch(error){calMessage('保存失败：'+error.message);}finally{calBusy=false;calLocks();calUpdateMatrices();}
+}
+calEl('calSave').onclick=()=>calSave(false);calEl('calRule').onclick=()=>calSave(true);
+calEl('calMount').onchange=calDraft;
+calEl('calRemoveRule').onclick=async()=>{if(!calActive||calBusy)return;calBusy=true;calLocks();try{await calApi('/api/calibration',{ref:calActive,action:'remove_rule'});calMessage('封装规则已删除，下次生成不再自动应用；当前工程校准保留。');}catch(error){calMessage(error.message);}finally{calBusy=false;calLocks();}};
+calEl('calAlign').onclick=()=>{
+  if(calPickStage){calPickStage='';calPinPoint=null;calMessage('已取消点选对齐。');return;}
+  if(calEl('calSnapMode').value==='origin'){const q=new THREE.Vector3().setFromMatrixPosition(matrixFor(PL[calActive]));calPinPoint=[q.x+PW/2,PH/2-q.z];calPickStage='pad';calMessage('模型原点已选中，请点击目标焊盘／阻焊开窗中心。');}
+  else{calPickStage='pin';calPinPoint=null;calMessage(calEl('calSnapMode').value==='pin-center'?'点击当前器件的金属引脚，捕捉该连通金属的几何中心，再点击目标焊盘。':'先点击当前器件的金属引脚，再点击目标焊盘中心。仅调整 X/Y；Esc 取消。');}
+};
+calEl('calSnapMode').onchange=()=>{calPickStage='';calPinPoint=null;calMessage('已切换捕捉起点，请点击“点选引脚 → 焊盘”开始。');};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&calPickStage){calPickStage='';calMessage('已取消点选对齐。');}});
+/* Pin islands: weld triangle vertices, then bound each connected metal island. */
+function calPinIslands(positions,indices){
+  const count=positions.length/3,keys=new Map(),vertexIds=new Int32Array(count),parent=[],points=[];
+  for(let i=0;i<count;i++){const p=[positions[i*3],positions[i*3+1],positions[i*3+2]],key=p.map(v=>Math.round(v*1e5)).join(',');let id=keys.get(key);if(id===undefined){id=parent.length;keys.set(key,id);parent.push(id);points.push(p);}vertexIds[i]=id;}
+  function root(n){while(parent[n]!==n){parent[n]=parent[parent[n]];n=parent[n];}return n;}
+  const total=indices?indices.length:count;
+  for(let i=0;i+2<total;i+=3){const a=root(vertexIds[indices?indices[i]:i]);for(let j=1;j<3;j++)parent[root(vertexIds[indices?indices[i+j]:i+j])]=a;}
+  const bounds=new Map();for(let i=0;i<points.length;i++){const r=root(i),p=points[i];let b=bounds.get(r);if(!b){b=[p.slice(),p.slice()];bounds.set(r,b);}else for(let k=0;k<3;k++){b[0][k]=Math.min(b[0][k],p[k]);b[1][k]=Math.max(b[1][k],p[k]);}}
+  const centers=new Map([...bounds].map(([id,b])=>[id,b[0].map((v,k)=>(v+b[1][k])/2)]));
+  return Array.from({length:Math.floor(total/3)},(_,face)=>centers.get(root(vertexIds[indices?indices[face*3]:face*3])));
+}
+/* End pin-island geometry helper. */
+function calibrationPick(ev){
+  const p=PL[calActive];if(!p||calBusy)return;const rect=renderer.domElement.getBoundingClientRect();ndc.set((ev.clientX-rect.left)/rect.width*2-1,-(ev.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(ndc,camera);
+  if(calPickStage==='pin'){
+    const meshes=[];detailRoot.traverse(o=>{if(o.isInstancedMesh&&o.visible)meshes.push(o);});const hit=ray.intersectObjects(meshes,false)[0];
+    if(!hit||!hit.object.userData.materialName?.startsWith('PIN')||instanceLookup.get(hit.object.uuid+':'+hit.instanceId)!==calActive){calMessage('请点击当前器件的金属引脚；可先缩放视图。');return;}
+    let point=hit.point.clone();
+    if(calEl('calSnapMode').value==='pin-center'){
+      const geo=hit.object.geometry;let centers=calPinCache.get(geo);if(!centers){centers=calPinIslands(geo.attributes.position.array,geo.index?.array);calPinCache.set(geo,centers);}
+      const center=centers[hit.faceIndex];if(!center){calMessage('无法识别引脚中心，请改用点选引脚位置。');return;}
+      const im=new THREE.Matrix4();hit.object.getMatrixAt(hit.instanceId,im);point=new THREE.Vector3(...center).applyMatrix4(im).applyMatrix4(hit.object.matrixWorld);
+    }
+    const q=detailRoot.worldToLocal(point);calPinPoint=[q.x+PW/2,PH/2-q.z];calPickStage='pad';calMessage(calEl('calSnapMode').value==='pin-center'?'引脚几何中心已选中。现在点击本面目标焊盘／阻焊开窗中心。':'引脚已选中。现在点击本面目标焊盘中心，工具会吸附到焊盘。');return;
+  }
+  const planePoint=detailRoot.localToWorld(new THREE.Vector3(0,p.side==='top'?T+MASK:-MASK,0)),normal=detailRoot.localToWorld(new THREE.Vector3(0,1,0)).sub(detailRoot.localToWorld(new THREE.Vector3())).normalize();
+  const hit=ray.ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal,planePoint),new THREE.Vector3());if(!hit)return;const q=detailRoot.worldToLocal(hit),x=q.x+PW/2,y=PH/2-q.z;
+  const pads=[...(PADS[p.side]||[]),...(ALIGNMENT_PADS[p.side]||[])].map(pad=>({pad,d:Math.hypot(x-pad[0],y-pad[1])})).sort((a,b)=>a.d-b.d),nearest=pads[0];
+  if(!nearest||nearest.d>Math.max(.6,Math.hypot(nearest.pad[2],nearest.pad[3])/2)){calMessage('点击位置附近没有本面焊盘，请点击目标焊盘中心。');return;}
+  calEl('calDx').value=Number(calEl('calDx').value)+nearest.pad[0]-calPinPoint[0];calEl('calDy').value=Number(calEl('calDy').value)+nearest.pad[1]-calPinPoint[1];calPickStage='';calPinPoint=null;calDraft();
+}
+calEl('calExport').onclick=async()=>{
+  if(calBusy||calDirty.size)return;calBusy=true;calLocks();calEl('calDownload').hidden=true;
+  try{await calApi('/api/project/export',{});calMessage('正在按已保存校准导出 STP…');
+    for(;;){await new Promise(resolve=>setTimeout(resolve,1000));const r=await fetch('/api/job?id='+calJobId),job=await r.json();if(!r.ok)throw new Error(job.error);calMessage(job.messages?.at(-1)||'正在导出 STP…');if(job.state==='running')continue;if(job.state!=='done')throw new Error(job.error||'STP 导出失败');const step=job.downloads.find(item=>/\.(stp|step)$/i.test(item.name));if(step){calEl('calDownload').href=step.url;calEl('calDownload').download=step.name;calEl('calDownload').hidden=false;}calMessage('校准 STP 已导出并回读验证通过。');break;}
+  }catch(error){calMessage(error.message);}finally{calBusy=false;calLocks();}
+};
+calLocks();
+function mfgBodyCenter(p){
+  const key=modelKey(p);if(bodyCenterCache.has(key))return bodyCenterCache.get(key)?.clone();
+  const parts=MODELS[key]?.parts||[],body=parts.filter(part=>!/^(PIN|LEAD|TERMINAL|MARK|IC-LABEL|LABEL)/i.test(part.mat||'')),box=new THREE.Box3();
+  for(const part of body.length?body:parts){const v=part.v||[];for(let i=0;i+2<v.length;i+=3)box.expandByPoint(new THREE.Vector3(v[i],v[i+1],v[i+2]));}
+  const point=box.isEmpty()?null:box.getCenter(new THREE.Vector3());bodyCenterCache.set(key,point);return point?.clone();
+}
+function mfgInvalidate(saved){
+  if(saved)delete MANUFACTURING.last_export;
+  calEl('mfgFiles').replaceChildren();calEl('mfgIssues').replaceChildren();
+  calEl('mfgStatus').textContent=saved?'调整已保存，请重新运行检查和导出坐标。':'有未保存调整；请保存或撤销后再检查、导出。';
+}
+function mfgShowIssues(issues){
+  const root=calEl('mfgIssues');root.replaceChildren();
+  for(const issue of issues||[]){const button=document.createElement('button');button.style.cssText='display:block;width:100%;text-align:left;margin:4px 0;font-size:11px';button.textContent=`${issue.level} · ${issue.ref}${issue.other?' / '+issue.other:''}：${issue.message}`;
+    button.onclick=()=>{const refs=[issue.ref,issue.other].filter(ref=>PL[ref]);if(!refs.length)return;setSelection(refs);if(PL[refs[0]].side==='top')viewTop();else viewBottom();calEl('calibrationPanel').open=true;};root.append(button);}
+}
+function mfgRenderExport(result){
+  calEl('mfgFiles').replaceChildren();if(!result)return;
+  const s=result.summary;calEl('mfgStatus').textContent=`${s.partial?'部分坐标':'坐标已导出'}：SMT 顶面 ${s.smt_top} / 底面 ${s.smt_bottom}；插件 ${s.tht}；待处理 ${s.pending.length} 项；DFM ${s.dfm_issues.length} 项。${s.basis==='body'?'本体中心':'模型原点'} / ${s.origin==='source'?'生产原点':'板原点'} / ${s.angle_mode==='board'?'顶视角度':'本面角度'}。`;
+  for(const file of result.files||[]){const a=document.createElement('a');a.textContent=file.name;a.href=file.url;a.download=file.name;a.style.color='#8dc1ff';calEl('mfgFiles').append(a);}
+  mfgShowIssues(s.dfm_issues);
+}
+calEl('mfgCheck').onclick=async()=>{
+  if(calBusy||calDirty.size)return;calBusy=true;calLocks();calEl('mfgStatus').textContent='正在检查已保存位置…';
+  try{const s=await calApi('/api/project/dfm',{options:{basis:calEl('mfgBasis').value,origin:calEl('mfgOrigin').value,angle_mode:calEl('mfgAngle').value}});calEl('mfgStatus').textContent=`已检查 ${s.rows} 个器件；待处理 ${s.pending.length} 项；几何预警及信息 ${s.dfm_issues.length} 项。点击问题可高亮器件。`;mfgShowIssues(s.dfm_issues);}
+  catch(error){calEl('mfgStatus').textContent=error.message;}finally{calBusy=false;calLocks();}
+};
+calEl('mfgExport').onclick=async()=>{
+  if(calBusy||calDirty.size)return;calBusy=true;calLocks();calEl('mfgStatus').textContent='正在导出坐标和 DFM 报告…';
+  try{const result=await calApi('/api/project/coordinates',{options:{basis:calEl('mfgBasis').value,origin:calEl('mfgOrigin').value,angle_mode:calEl('mfgAngle').value,allow_partial:calEl('mfgPartial').checked}});MANUFACTURING.last_export=result;mfgRenderExport(result);}
+  catch(error){calEl('mfgStatus').textContent='导出失败：'+error.message;}finally{calBusy=false;calLocks();}
+};
+mfgRenderExport(MANUFACTURING.last_export);
+document.getElementById('clearHighlight').onclick=()=>setSelection([]);
+
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]);
+  down = null;
+  if (moved > 4) return;
+  if(calBusy)return;
+  if (calPickStage) {calibrationPick(e);return;}
+  setSelected(pick(e));
+});
+
+/* ------------------------------------------------------------------ BOM */
+const bmWrap = document.getElementById('bmWrap');
+for (const row of DATA.bom) {
+  const rowRefs = String(row.refs).split(/[,，;；\s]+/).filter(Boolean);
+  const el = document.createElement('div');
+  el.className = 'bmrow';
+  el.dataset.refs = rowRefs.join(','); el.dataset.name=row.name || row.val || row.desc || 'BOM 器件';
+  el.dataset.details=[row.name,row.val,row.desc].filter(Boolean).join(' · ');
+  el.dataset.search=[row.code,row.name,row.val,row.desc,row.refs].filter(Boolean).join(' ');
+  el.tabIndex=0;el.setAttribute('role','button');
+  el.innerHTML = `<span class="code">${escapeHTML(row.code ? row.code.slice(0, 5) : '—')}</span>
+    <span class="nm"><b>${escapeHTML(row.name || row.val || '—')}</b><span>${escapeHTML(row.desc || '')}</span></span>
+    <span class="q">×${escapeHTML(row.qty)}</span>`;
+  el.title = `${row.refs}\n${row.desc}`;
+  const pendingCount=rowRefs.filter(ref=>pendingParts.some(part=>part.ref===ref)).length;
+  if(pendingCount){el.querySelector('.nm').append(document.createTextNode(`待处理 ${pendingCount} 个`));el.title+=`\n待处理 ${pendingCount} 个，匹配后显示`;}
+  el.onclick = () => {
+    if (selectedBomRow===el) { setSelection([]);return; }
+    setSelection(rowRefs,el);
+    if (selectedRefs.length) {
+      const side=PL[selectedRefs[0]].side;
+      if (selectedRefs.every(ref=>PL[ref].side===side)) { if(side==='top')viewTop();else viewBottom(); }
+      else if(componentSide==='all')viewTop();
+    }
+  };
+  el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}};
+  bmWrap.appendChild(el);
+}
+document.getElementById('bmCount').textContent = `${DATA.bom.length} 行 / 已显示 ${Object.keys(PL).length} 个`+(pendingParts.length?` · 待处理 ${pendingParts.length} 个`:'');
+function filterBom(){
+  const normalize=value=>String(value).toLowerCase().replace(/[µμ]/g,'u').replace(/\s+/g,'');
+  const query=normalize(document.getElementById('bomFilter').value);let count=0;
+  for(const row of document.querySelectorAll('.bmrow')){row.hidden=!!query&&!normalize(row.dataset.search).includes(query);if(!row.hidden)count++;}
+  document.getElementById('bomFilterStatus').textContent=query?`找到 ${count} 行物料；点击一行高亮本面器件。`:'';
+}
+document.getElementById('bomFilter').oninput=filterBom;
+
+const refLookup=new Map();
+for(const ref of [...Object.keys(PL),...pendingParts.map(p=>p.ref)]){
+  if(!ref)continue;const name=String(ref),key=name.toUpperCase();
+  if(!refLookup.has(key))refLookup.set(key,name);
+}
+for(const ref of [...refLookup.values()].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))){const option=document.createElement('option');option.value=ref;document.getElementById('refSuggestions').append(option);}
+document.getElementById('refSearchForm').onsubmit=event=>{
+  event.preventDefault();const status=document.getElementById('refStatus'),ref=refLookup.get(document.getElementById('refSearch').value.trim().toUpperCase());
+  if(calBusy){status.textContent='正在保存或导出，请完成后再定位。';return;}
+  if(!ref){setSelection([]);status.textContent='没有找到该完整位号。请核对 BOM / XY，例如 R43；不会按相近名称选择。';return;}
+  const p=PL[ref];if(!p){setSelection([]);const pending=pendingParts.find(p=>p.ref===ref);status.textContent=`${ref} 尚未显示：${pending?.message||'缺少模型或坐标'}。补齐后才能定位。`;return;}
+  document.getElementById('cComp').checked=true;
+  if(modelKey(p)==='SENSOR_FILM_7x5')document.getElementById('cFilm').checked=true;
+  if(p.side==='top')viewTop();else viewBottom();
+  setSelected(ref);detailRoot.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(selectionRoot);if(!box.isEmpty())frameBox(box.expandByScalar(2),1.6);
+  document.getElementById('refSearch').value=ref;
+  status.textContent=`已定位 ${ref} · ${p.side==='top'?'顶面 TOP':'底面 BOTTOM'} · ${p.pkg}。高亮对应器件；可打开“器件 / 校准”调整。`;
+};
+document.getElementById('vDFM').onclick=()=>{setPanelCollapsed(false);calEl('calibrationPanel').open=false;calEl('assemblyPanel').open=false;calEl('manufacturingPanel').open=true;calEl('manufacturingPanel').scrollIntoView({block:'start'});};
+document.getElementById('vAssembly').onclick=()=>{setPanelCollapsed(false);calEl('calibrationPanel').open=false;calEl('manufacturingPanel').open=false;calEl('assemblyPanel').open=true;calEl('assemblyPanel').scrollIntoView({block:'start'});};
+async function assemblyEstimate(exportFile){
+  if(calBusy||calDirty.size){calEl('assemblyStatus').textContent='请先保存或撤销未保存的校准和安装类型，再统计。';return;}
+  calEl('quoteCalculate').disabled=calEl('quoteExport').disabled=true;
+  try{
+    const fields={boards:'quoteBoards'},options={};
+    for(const [key,id] of Object.entries(fields)){const value=calEl(id).value.trim();options[key]=value===''?null:Number(value);}
+    const result=await calApi('/api/project/assembly',{options,export:exportFile});
+    calEl('assemblyStatus').textContent=result.text;calEl('assemblyFiles').replaceChildren();
+    for(const file of result.files||[]){const a=document.createElement('a');a.href=file.url;a.download=file.name;a.textContent=file.name;a.style.color='#8dc1ff';a.style.display='block';calEl('assemblyFiles').append(a);}
+  }catch(error){calEl('assemblyStatus').textContent=error.message;}
+  finally{calEl('quoteCalculate').disabled=calEl('quoteExport').disabled=false;}
+}
+calEl('quoteCalculate').onclick=()=>assemblyEstimate(false);calEl('quoteExport').onclick=()=>assemblyEstimate(true);
+
+/* ------------------------------------------------------------------ camera */
+function frameBox(box, pad = 1.25) {
+  const c = box.getCenter(new THREE.Vector3());
+  let dir = camera.position.clone().sub(controls.target).normalize();
+  if (dir.lengthSq() < 1e-6) dir = new THREE.Vector3(0.55, 1, 0.75).normalize();
+  const right = new THREE.Vector3().crossVectors(camera.up,dir).normalize();
+  const up = new THREE.Vector3().crossVectors(dir,right).normalize();
+  const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  let dist=0;
+  for (const x of [box.min.x,box.max.x]) for (const y of [box.min.y,box.max.y]) for (const z of [box.min.z,box.max.z]) {
+    const v=new THREE.Vector3(x,y,z).sub(c);
+    dist=Math.max(dist,v.dot(dir)+Math.max(Math.abs(v.dot(right))/(tan*camera.aspect),Math.abs(v.dot(up))/tan));
+  }
+  dist*=pad;
+  controls.target.copy(c);
+  camera.position.copy(c).add(dir.multiplyScalar(dist));
+  controls.update();
+}
+function viewAll() {
+  frameBox(new THREE.Box3().setFromObject(boardRoot), 1.18);
+}
+function viewTop() {
+  setComponentSide('top');
+  const b = new THREE.Box3().setFromObject(boardRoot);
+  const c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3());
+  const dist = (Math.max(s.x, s.z) / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.28 / Math.min(1,camera.aspect);
+  camera.up.set(0, 0, -1);
+  controls.target.copy(c);
+  camera.position.set(c.x + 0.001, c.y + dist, c.z + 0.001);
+  controls.update();
+}
+function viewBottom() {
+  setComponentSide('bottom');
+  const b = new THREE.Box3().setFromObject(boardRoot);
+  const c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3());
+  const dist = (Math.max(s.x, s.z) / 2 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.28 / Math.min(1,camera.aspect);
+  camera.up.set(0, 0, 1);
+  controls.target.copy(c);
+  camera.position.set(c.x + 0.001, c.y - dist, c.z + 0.001);
+  controls.update();
+}
+function viewIso() {
+  setComponentSide('all');
+  const b = new THREE.Box3().setFromObject(boardRoot);
+  const c = b.getCenter(new THREE.Vector3());
+  camera.up.set(0, 1, 0);
+  controls.target.copy(c);
+  camera.position.set(c.x + 42, c.y + 46, c.z + 56);
+  viewAll();
+}
+function frameOn(ref) {
+  const p = PL[ref];
+  if (!p) return;
+  const pose = POSEFIX[ref];
+  const cx = pose && pose.conn ? pose.conn.cx : p.x;
+  const cy = pose && pose.conn ? pose.conn.cy : p.y;
+  const c = new THREE.Vector3(cx - PW / 2, T + MASK, -(cy - PH / 2)).add(A1);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  controls.target.copy(c);
+  camera.position.copy(c).add(dir.multiplyScalar(16));
+  controls.update();
+}
+
+/* ------------------------------------------------------------------ UI */
+const $ = id => document.getElementById(id);
+$('vTop').onclick = viewTop;
+$('vBot').onclick = viewBottom;
+$('vIso').onclick = viewIso;
+$('vFit').onclick = viewAll;
+
+function saveView(kind) {
+  const previous = {pos:camera.position.clone(),up:camera.up.clone(),target:controls.target.clone(),
+    side:componentSide,aspect:camera.aspect,fov:camera.fov,ratio:renderer.getPixelRatio(),size:renderer.getSize(new THREE.Vector2())};
+  setComponentSide(kind==='top'?'top':kind==='bottom'?'bottom':'all');
+  const w=1600,h=kind==='iso'?1200:1600;
+  renderer.setPixelRatio(1); renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.fov=30; camera.updateProjectionMatrix();
+  controls.target.set(0,0,0);
+  if(kind==='bottom'){camera.up.set(0,0,1);camera.position.set(.001,-94,.001);}
+  else if(kind==='top'){camera.up.set(0,0,-1);camera.position.set(.001,94,.001);}
+  else {camera.up.set(0,1,0);camera.position.set(46,56,54);}
+  camera.lookAt(0,0,0); camera.updateMatrixWorld();
+  renderer.render(scene,camera);
+  const a=document.getElementById('exportResult');
+  a.download='GK7205V10_MB_V01_RA_PCBA_3D'+(kind==='iso'?'':'_'+kind.toUpperCase())+'.png';
+  a.href=renderer.domElement.toDataURL('image/png');
+  a.textContent='保存已生成的'+(kind==='iso'?'等轴':kind==='bottom'?'底面':'顶面')+'图';
+  a.hidden=false;
+  camera.position.copy(previous.pos);camera.up.copy(previous.up);controls.target.copy(previous.target);
+  camera.aspect=previous.aspect;camera.fov=previous.fov;camera.updateProjectionMatrix();
+  renderer.setPixelRatio(previous.ratio);renderer.setSize(previous.size.x,previous.size.y,false);
+  setComponentSide(previous.side);
+  controls.update();
+}
+$('saveTop').onclick=()=>saveView('top');
+$('saveBottom').onclick=()=>saveView('bottom');
+$('saveIso').onclick=()=>saveView('iso');
+
+$('vReset').onclick = () => {
+  setComponentSide('all');
+  camera.up.set(0, 1, 0);
+  frameBox(new THREE.Box3().setFromObject(panelRoots[0]), 1.28);
+};
+
+let exploded = false;
+$('vExplode').onclick = e => {
+  exploded = !exploded;
+  e.target.classList.toggle('on', exploded);
+  for (const meshes of Object.values(INST)) {
+    for (const im of meshes) {
+      const list = im.userData.list;
+      let n = 0;
+      for (const off of panelOffsets) {
+        list.forEach((it) => {
+          const m = matrixFor(it.p, exploded ? 1 : 0);
+          m.elements[12] += off.x;
+          m.elements[14] += off.z;
+          im.setMatrixAt(n, m);
+          n++;
+        });
+      }
+      im.instanceMatrix.needsUpdate = true;
+    }
+  }
+  refreshHighlights();
+};
+
+function updateComponents(){
+  for(const [key,meshes] of Object.entries(INST)){
+    const show=$('cComp').checked && (key!=='SENSOR_FILM_7x5' || $('cFilm').checked);
+    meshes.forEach(o=>o.visible=show && (componentSide==='all'||o.userData.side===componentSide));
+  }
+  tags.children.forEach(o=>o.visible=componentSide==='all'||o.userData.side===componentSide);
+  refreshHighlights();
+}
+function setComponentSide(side){
+  componentSide=side;
+  for(const [id,value] of [['vTop','top'],['vBot','bottom'],['vIso','all']]){
+    $(id).classList.toggle('on',side===value);$(id).setAttribute('aria-pressed',String(side===value));
+  }
+  updateComponents();
+}
+$('cComp').onchange=updateComponents;
+$('cFilm').onchange=updateComponents;
+$('cPad').onchange = e => { panelRoots.forEach(p => p.userData.pads.visible = e.target.checked); };
+$('cTag').onchange = e => { tags.visible = e.target.checked; };
+
+
+
+/* ------------------------------------------------------------------ start */
+{
+  const b0 = new THREE.Box3().setFromObject(panelRoots[0]);
+  const c0 = b0.getCenter(new THREE.Vector3());
+  camera.up.set(0, 1, 0);
+  controls.target.copy(c0);
+  camera.position.set(c0.x + 44, c0.y + 56, c0.z + 52);
+  viewAll();
+}
+
+const loaderEl = $('load');
+loaderEl.style.transition = 'opacity .4s';
+loaderEl.style.opacity = 0;
+loaderEl.style.pointerEvents = 'none';
+setTimeout(() => loaderEl.remove(), 450);
+
+/* ------------------------------------------------------------------ post-processing (contact AO) */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const ssaoPass = new SSAOPass(scene, camera, view.clientWidth, view.clientHeight);
+ssaoPass.kernelRadius = 1.4;
+ssaoPass.minDistance = 0.0006;
+ssaoPass.maxDistance = 0.045;
+ssaoPass.output = SSAOPass.OUTPUT.Default;
+composer.addPass(ssaoPass);
+window.composer = composer; window.ssaoPass = ssaoPass;
+
+addEventListener('resize', () => {
+  camera.aspect = view.clientWidth / view.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(view.clientWidth, view.clientHeight);
+  composer.setSize(view.clientWidth, view.clientHeight);
+});
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  composer.render();
+});
+
+window.scene = scene; window.boardRoot = boardRoot; window.modelGroups = modelGroups; window.PL = PL; window.THREE = THREE; window.panelRoots = panelRoots;
+window.camera = camera; window.controls = controls; window.renderer = renderer;
+window.viewAll = viewAll; window.viewTop = viewTop; window.viewBottom = viewBottom; window.viewIso = viewIso;
+window.DATA = DATA; window.setSelected = setSelected; window.frameOn = frameOn;
+window.setComponentSide=setComponentSide;
+window.__ready = true;
+</script>
+</body>
+</html>
