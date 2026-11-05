@@ -8,5 +8,6 @@
 *.step text eol=lf whitespace=-blank-at-eol
 *.wrl text eol=lf whitespace=-blank-at-eol
 thirdparty_licenses/** whitespace=-blank-at-eol,-blank-at-eof
+assets/vendor/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 **/来源与许可/** whitespace=-blank-at-eol,-blank-at-eof
 *.png binary
