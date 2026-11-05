@@ -649,6 +649,10 @@ def generate_config(app, filename):
 
 
 def main():
+    # Windows installations may use a non-Chinese legacy console encoding.
+    for stream in (sys.stdout, sys.stderr):
+        if stream and hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8', errors='backslashreplace')
     parser = argparse.ArgumentParser(description="PCBA3D 本地生成工具")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--no-browser", action="store_true")
