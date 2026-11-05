@@ -1,0 +1,61 @@
+name: Publish Verified Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Windows Build run ID
+        required: true
+      tag:
+        description: Release tag
+        required: true
+        default: v1.3.1-public
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_ID: ${{ inputs.run_id }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Check successful build and download its artifact
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] && [[ "$TAG" =~ ^v[A-Za-z0-9._-]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$RUN_ID" > run.json
+          python -c 'import json; r=json.load(open("run.json")); assert r["conclusion"]=="success" and r["name"]=="Windows Build"; print("Verified", r["head_sha"])'
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name PCBA3D-Windows-x64 --dir package
+      - name: Verify archive integrity and public package
+        shell: python
+        run: |
+          import hashlib, json, zipfile
+          from pathlib import Path
+          root=Path('package'); archive=next(root.glob('*.zip'))
+          assert hashlib.sha256(archive.read_bytes()).hexdigest()==(root/'SHA256SUMS.txt').read_text().split()[0]
+          with zipfile.ZipFile(archive) as z:
+              assert not any('API设置.json' in n for n in z.namelist())
+              models=json.loads(z.read(next(n for n in z.namelist() if n.endswith('/用户模型库/models.json'))))
+              result=json.loads(z.read(next(n for n in z.namelist() if n.endswith('/自检结果.json'))))
+              assert len(models)==45 and result['ok'] and result['models']==64 and result['sample'] is False
+      - name: Publish the verified build
+        run: |
+          COMMIT=$(python -c 'import json; print(json.load(open("run.json"))["head_sha"])')
+          cat > notes.md <<'NOTES'
+          从 BOM、XY 和 Gerber/Excellon 生成 PCBA 3D，支持预览、手工贴片找料、器件校准、基础几何 DFM、修正坐标及 STEP 导出。
+
+          **非商业学习和评估可用；商业生产、企业营利业务内部使用、有偿服务或产品集成，需事先取得书面商用授权。** 详见仓库 LICENSE，第三方模型保留原许可。
+
+          Windows x64 完整 ZIP 含 EXE、64 种常规模型、封装映射、使用说明和第三方许可证。不含真实生产资料或 API 密钥。完整解压后运行 PCBA3D.exe，保留旁边的用户模型库与 aliases.json。
+
+          已通过 Windows 干净环境安装、源码合成板生成与坐标检查、EXE 64 模型自检，以及 EXE 自身导入合成资料、生成 STEP 并回读验证。附 SHA256SUMS.txt。
+          NOTES
+          if ! gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GH_REPO" --target "$COMMIT" --title "PCBA3D $TAG" --notes-file notes.md
+          fi
+          gh release upload "$TAG" package/* --repo "$GH_REPO" --clobber
