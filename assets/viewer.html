@@ -12,12 +12,14 @@
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
     font-family:"Inter","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;
     -webkit-font-smoothing:antialiased}
-  #app{position:fixed;inset:0}
-  #view{position:absolute;inset:0;left:272px}
+  #app{position:fixed;inset:0;display:grid;grid-template-columns:272px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+  #app.tools-open{grid-template-columns:272px minmax(0,1fr) 286px}
+  #view{position:relative;grid-column:2;grid-row:1;min-width:0;min-height:0;overflow:hidden}
   canvas{display:block}
 
-  #side{position:absolute;left:0;top:0;bottom:0;z-index:5;width:272px;background:rgba(20,23,29,.93);
-    border-right:1px solid var(--line);display:flex;flex-direction:column;backdrop-filter:blur(10px)}
+  #side{position:relative;grid-column:1;grid-row:1;z-index:5;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:rgba(20,23,29,.93);
+    border-right:1px solid var(--line);display:flex;flex-direction:column;backdrop-filter:blur(10px);scrollbar-gutter:stable}
+  #side>*{flex-shrink:0}
   #side h1{font-size:12.5px;font-weight:600;margin:0;padding:13px 15px 3px;letter-spacing:.02em}
   #side .sub{font-size:10.5px;color:var(--dim);padding:0 15px 11px;line-height:1.55}
   .sec{border-top:1px solid var(--line);padding:10px 15px}
@@ -29,7 +31,7 @@
   button.on{background:rgba(78,161,255,.16);border-color:var(--acc);color:#cfe6ff}
   label.chk{display:flex;align-items:center;gap:7px;font-size:11px;color:#c6ccda;cursor:pointer;padding:3px 0;width:100%}
   label.chk input{accent-color:var(--acc);margin:0}
-  #bmWrap{flex:1;overflow:auto;min-height:0;border-top:1px solid var(--line)}
+  #bmWrap{flex:1 0 210px;overflow:visible;min-height:210px;border-top:1px solid var(--line);padding-bottom:15px}
   #bmWrap::-webkit-scrollbar{width:8px}
   #bmWrap::-webkit-scrollbar-thumb{background:#2b3140;border-radius:4px}
   .bmrow{display:flex;gap:7px;padding:4px 15px;font-size:11px;line-height:1.35;cursor:pointer;border-left:2px solid transparent}
@@ -42,9 +44,9 @@
   .bmrow .nm span{display:block;color:var(--dim);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bmrow .q{color:var(--acc2);font-variant-numeric:tabular-nums}
 
-  #hud{position:absolute;z-index:5;top:14px;right:14px;width:262px;background:rgba(20,23,29,.93);
-    border:1px solid var(--line);border-radius:9px;font-size:11px;line-height:1.65;
-    backdrop-filter:blur(10px);pointer-events:none;max-height:calc(100% - 28px);display:flex;flex-direction:column;overflow:hidden}
+  #hud{position:relative;grid-column:3;grid-row:1;z-index:5;min-height:0;min-width:0;background:rgba(20,23,29,.93);
+    border-left:1px solid var(--line);font-size:11px;line-height:1.65;
+    backdrop-filter:blur(10px);pointer-events:none;display:flex;flex-direction:column;overflow:hidden}
   #hud[hidden]{display:none}
   #hudHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;
     padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);pointer-events:auto}
@@ -74,11 +76,26 @@
   #assemblyPanel{pointer-events:auto;border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
   #assemblyPanel input{width:100%;background:var(--panel2);color:var(--txt);border:1px solid #465066;border-radius:4px;padding:5px}
   #assemblyStatus{white-space:pre-wrap;color:#ffcf74;margin-top:8px}
+  #side::-webkit-scrollbar,#hudContent::-webkit-scrollbar{width:9px}
+  #side::-webkit-scrollbar-thumb,#hudContent::-webkit-scrollbar-thumb{background:#465066;border-radius:5px}
+  @media(max-width:1050px){
+    #app{grid-template-columns:248px minmax(0,1fr)}
+    #app.tools-open{grid-template-columns:286px minmax(0,1fr)}
+    #app.tools-open #side{display:none}
+    #app.tools-open #hud{grid-column:1;border-left:0;border-right:1px solid var(--line)}
+    #app.tools-open #tips{left:302px}
+  }
+  @media(max-width:600px){
+    #app{grid-template-columns:200px minmax(0,1fr)}
+    #app.tools-open{grid-template-columns:min(52vw,260px) minmax(0,1fr)}
+    .sec{padding:8px 10px}#hudContent{padding:8px}#hudHeader{padding:8px;flex-wrap:wrap}
+    #tips{display:none}
+  }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="side">
+  <div id="side" tabindex="0" aria-label="BOM 与视图工具，可滚动">
     <h1>GK7205V10_MB_V01_RA</h1>
     <div class="sub">PCBA 3D · 单板 38 × 38 × 1.6 mm<br>
       242 个实装器件 + 1 件 Sensor 保护膜<br>
@@ -95,7 +112,7 @@
       <div class="row">
         <button id="vExplode">爆炸</button>
         <button id="vReset">重置</button>
-        <button id="vPanel" type="button" aria-controls="hud" aria-expanded="true" title="展开或收起右侧器件、校准与 DFM 面板">器件 / 校准</button>
+        <button id="vPanel" type="button" aria-controls="hud" aria-expanded="true" title="展开或收起停靠的器件、校准与 DFM 工具；不会遮挡电路板">器件 / 校准</button>
       </div>
       <div class="row">
         <button id="saveTop">导出顶面图</button>
@@ -134,8 +151,8 @@
 
   <div id="view"></div>
   <div id="hud">
-    <div id="hudHeader"><strong>器件 / 校准 / DFM</strong><button id="hudClose" type="button" aria-label="收起器件面板" title="收起后从左侧“器件 / 校准”重新展开">收起 ×</button></div>
-    <div id="hudContent">
+    <div id="hudHeader"><strong>器件 / 校准 / DFM</strong><button id="hudClose" type="button" aria-label="收起器件面板" title="收起校准，回到 BOM 和视图工具；保留当前调整">BOM / 视图 ×</button></div>
+    <div id="hudContent" tabindex="0" aria-label="器件校准工具，可滚动">
     <div class="h">点击器件查看</div>
     <div id="hudBody" style="color:#858da0">在场景中单击任意元件</div>
     <details id="calibrationPanel" open>
@@ -221,6 +238,7 @@ const hudPanel=document.getElementById('hud'),panelToggle=document.getElementByI
 const panelPreference='pcba3d.hudCollapsed';
 function setPanelCollapsed(collapsed,persist=true){
   hudPanel.hidden=collapsed;
+  document.getElementById('app').classList.toggle('tools-open',!collapsed);
   panelToggle.setAttribute('aria-expanded',String(!collapsed));
   panelToggle.classList.toggle('on',!collapsed);
   if(persist){try{localStorage.setItem(panelPreference,collapsed?'1':'0');}catch{}}
@@ -1467,12 +1485,19 @@ ssaoPass.output = SSAOPass.OUTPUT.Default;
 composer.addPass(ssaoPass);
 window.composer = composer; window.ssaoPass = ssaoPass;
 
-addEventListener('resize', () => {
-  camera.aspect = view.clientWidth / view.clientHeight;
+function resizeViewport(){
+  const width=Math.max(1,view.clientWidth),height=Math.max(1,view.clientHeight),previousAspect=camera.aspect;
+  camera.aspect = width / height;
+  // Keep the current target and magnification when the controls take space.
+  // Compensate only when horizontal space limits the field of view.
+  const ratio=Math.min(1,previousAspect)/Math.min(1,camera.aspect);
+  if(Number.isFinite(ratio)&&ratio>0&&Math.abs(ratio-1)>.001)camera.position.sub(controls.target).multiplyScalar(ratio).add(controls.target);
   camera.updateProjectionMatrix();
-  renderer.setSize(view.clientWidth, view.clientHeight);
-  composer.setSize(view.clientWidth, view.clientHeight);
-});
+  renderer.setSize(width,height);
+  composer.setSize(width,height);
+}
+addEventListener('resize',resizeViewport);
+const viewportObserver=new ResizeObserver(resizeViewport);viewportObserver.observe(view);
 
 renderer.setAnimationLoop(() => {
   controls.update();
