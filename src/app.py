@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234

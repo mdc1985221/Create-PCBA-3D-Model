@@ -1,5 +1,6 @@
 """Local BOM/XY/Gerber importer with reusable package aliases."""
 import csv,io,json,re,shutil,zipfile,math,html as html_lib
+from collections import Counter
 from pathlib import Path, PurePosixPath
 from PIL import Image,ImageChops
 import gerber
@@ -209,6 +210,20 @@ def refs(s):
     bad=[p for p in tokens if not re.fullmatch(r'(?:[A-Z]+\d+(?:-\d+)?|[+-]?\d+(?:\.\d+)?[A-Z]+\d*)',p)]
     if bad:raise ValueError('无法识别位号：'+','.join(bad)+'；请用逗号分隔，范围可写 R1-R3')
     return tokens
+
+def bom_duplicate_error(rr,previous,line,quantity=''):
+    """Report only duplicated references, with their original table rows."""
+    counts=Counter(rr)
+    within=sorted(ref for ref,count in counts.items() if count>1)
+    across=sorted(set(rr).intersection(previous))
+    duplicates=sorted(set(within+across))
+    if not duplicates:return ''
+    details=[]
+    if within:details.append('本行内重复：'+','.join(within))
+    if across:details.append('已出现在 '+', '.join(ref+'（第 '+str(previous[ref])+' 行）' for ref in across))
+    if quantity:details.append('用量 '+quantity)
+    details.append('位号条目 '+str(len(rr))+'，不同位号 '+str(len(counts)))
+    return 'BOM 第 '+str(line)+' 行位号重复：'+','.join(duplicates)+'；'+'；'.join(details)+'。请核对原表位号和用量，未自动删减。'
 def num(s):
     m=re.fullmatch(r'\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?)\s*(?:mm|mils?|deg|°)?\s*',str(s),re.I)
     if not m:raise ValueError('无效数值：'+str(s))
@@ -301,7 +316,7 @@ def build(assets,out,files,config,progress):
         try:
             placements[ref]=dict(ref=ref,x=num(get(row,'x'))*scale+num(config.get('xy_dx',0)),y=num(get(row,'y'))*scale+num(config.get('xy_dy',0)),rot=num(get(row,'rot') or '0'),side=side,pkg=pkg,val=value,population='populated',w=1,d=.5,h=.5)
         except ValueError as exc:xy_errors[ref]='坐标表第 '+str(line)+' 行 '+ref+'：'+str(exc)
-    bom=[];missing=[];seen_bom=set();bom_populated=set();accessory_candidates={}
+    bom=[];missing=[];seen_bom={};bom_populated=set();accessory_candidates={}
     if config.get('bom'):
         rows=read_table(inputs/Path(config['bom']).name);start,bc=header(rows,['ref'])
         for line,row in enumerate(rows[start+1:],start+2):
@@ -311,14 +326,14 @@ def build(assets,out,files,config,progress):
             if line in excluded_rows['bom']:
                 excluded_records.append(dict(table='bom',row=line,refs=rr));continue
             v=getb('val');de=getb('desc')
-            duplicates=seen_bom.intersection(rr)
-            if duplicates or len(set(rr))!=len(rr):raise ValueError('BOM 位号重复：'+','.join(sorted(duplicates or set(rr))))
-            seen_bom.update(rr)
             quantity=getb('qty')
+            duplicate_error=bom_duplicate_error(rr,seen_bom,line,quantity)
+            if duplicate_error:raise ValueError(duplicate_error)
+            seen_bom.update({ref:line for ref in rr})
             if not_fitted(getb('populate'),v):
                 for r in rr:placements.pop(r,None);nc.append(r)
                 continue
-            if quantity and num(quantity)!=len(rr):raise ValueError('BOM 数量与位号数不符：'+','.join(rr)+'；数量 '+quantity)
+            if quantity and num(quantity)!=len(rr):raise ValueError('BOM 第 '+str(line)+' 行数量与位号数不符：'+','.join(rr)+'；用量 '+quantity+'，不同位号 '+str(len(set(rr))))
             bom_populated.update(rr)
             material_name=getb('name') or v;material_code=getb('code')
             bom.append(dict(refs=','.join(rr),qty=len(rr),val=v,desc=de,name=material_name,code=material_code))

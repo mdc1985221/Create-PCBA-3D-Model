@@ -110,7 +110,7 @@ def inspect_files(files):
 
 def review_files(files, config, model_aliases, model_ids):
     """Review the same parsed table rows consumed by generation; exclusions are local."""
-    from generator import read_table, header, refs, not_fitted, norm
+    from generator import read_table, header, refs, not_fitted, norm, num, bom_duplicate_error
     sources, warnings = expand_sources(files)
     result = dict(bom_rows=[], xy_rows=[], footprints=[], warnings=warnings)
     placements, populated = {}, set()
@@ -136,8 +136,17 @@ def review_files(files, config, model_aliases, model_ids):
             item = dict(row=number, refs=rr, qty=get('qty'), pkg=get('pkg'), val=get('val'),
                         desc=get('desc'), name=get('name'), code=get('code'),
                         excluded=number in excluded, active=not not_fitted(get('populate'), get('val')),
-                        duplicates=[])
+                        duplicates=[], issues=[])
             if not item['excluded']:
+                if role == 'bom':
+                    duplicate_error = bom_duplicate_error(rr, {ref: value['row'] for ref, value in seen.items()}, number, get('qty'))
+                    if duplicate_error:item['issues'].append(duplicate_error)
+                    if item['active'] and get('qty'):
+                        try:
+                            if num(get('qty')) != len(set(rr)):
+                                item['issues'].append('用量 '+get('qty')+' 与不同位号数 '+str(len(set(rr)))+' 不符，请核对原表')
+                        except ValueError:
+                            item['issues'].append('无效用量：'+get('qty'))
                 item['duplicates'] = sorted({ref for ref in rr if ref in seen or rr.count(ref) > 1})
                 for ref in rr:
                     if ref in seen:

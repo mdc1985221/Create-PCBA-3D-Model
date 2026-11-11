@@ -17,18 +17,19 @@ async function refreshReview(){
 function renderReview(){
   if(!reviewData)return;
   const missing=new Set(reviewData.missing_coordinates),query=$('reviewFilter').value.trim().toLowerCase();
-  let duplicates=0;
+  let duplicates=0,quantities=0;
   for(const role of ['bom','xy']){
     const root=$(role+'Review');root.replaceChildren();
     const table=document.createElement('table');table.className='review-table';
     const head=document.createElement('tr');for(const name of ['行 / 状态','位号 / 物料','操作']){const th=document.createElement('th');th.textContent=name;head.append(th);}table.append(head);
     for(const row of reviewData[role+'_rows']){
       if(row.duplicates.length&&!row.excluded)duplicates++;
+      if(!row.excluded&&(row.issues||[]).some(issue=>issue.includes('不符')||issue.includes('无效用量')))quantities++;
       if(query&&!JSON.stringify([row.refs,row.val,row.pkg,row.desc,row.name]).toLowerCase().includes(query))continue;
       const tr=document.createElement('tr'),status=document.createElement('td'),body=document.createElement('td'),action=document.createElement('td'),button=document.createElement('button');
       if(row.excluded)tr.className='review-excluded';
       status.textContent='第 '+row.row+' 行'+(row.excluded?' · 已排除':!row.active?' · NC':'');
-      const problems=[];if(row.duplicates.length)problems.push('重复位号：'+row.duplicates.join(', '));if(role==='bom'&&!row.excluded&&row.active){const refs=row.refs.filter(ref=>missing.has(ref));if(refs.length)problems.push('缺坐标：'+refs.join(', '));}
+      const problems=[...(row.issues||[])];if(row.duplicates.length&&!problems.some(issue=>issue.includes('位号重复')))problems.push('重复位号：'+row.duplicates.join(', '));if(role==='bom'&&!row.excluded&&row.active){const refs=row.refs.filter(ref=>missing.has(ref));if(refs.length)problems.push('缺坐标：'+refs.join(', '));}
       body.textContent=row.refs.join(', ')+' · '+(row.name||row.val||row.pkg||'—');
       if(problems.length){const problem=document.createElement('div');problem.className='review-problem';problem.textContent=problems.join('；');body.append(problem);}
       button.textContent=row.excluded?'恢复此行':'排除此行';button.disabled=busy;
@@ -38,7 +39,8 @@ function renderReview(){
     }
     if(!reviewData[role+'_rows'].length)root.textContent=role==='bom'?'未选择 BOM。':'没有坐标行。';else root.append(table);
   }
-  $('reviewStatus').textContent='核对完成 · '+duplicates+' 行存在重复位号 · 缺坐标 '+missing.size+' 个 · 已排除 BOM '+excludedRows.bom.size+' 行 / XY '+excludedRows.xy.size+' 行';
+  $('reviewStatus').textContent='核对完成 · '+duplicates+' 行存在重复位号 · '+quantities+' 行用量异常 · 缺坐标 '+missing.size+' 个 · 已排除 BOM '+excludedRows.bom.size+' 行 / XY '+excludedRows.xy.size+' 行';
+  if(duplicates||quantities)$('dataReview').open=true;
   $('footprintStatus').textContent='已匹配 '+reviewData.matched+' 个器件 · 待匹配 '+reviewData.unmatched+' 个 · 缺坐标 '+missing.size+' 个';
   const root=$('footprintReview');root.replaceChildren();
   const table=document.createElement('table');table.className='review-table';
