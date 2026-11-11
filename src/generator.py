@@ -525,6 +525,8 @@ def build(assets,out,files,config,progress):
         hole_keys[key]=q
     holes=list(hole_keys.values())
     if duplicates:warnings.append('去除重复钻孔命中 '+str(duplicates)+' 个')
+    slots,duplicate_slots=gerber.deduplicate_slots(slots)
+    if duplicate_slots:warnings.append('板框与铣槽资料中重复的内轮廓已合并 '+str(duplicate_slots)+' 个（边界差不超过 0.001 mm），避免重复挖孔')
     for face,side in [('top','top'),('bot','bottom')]:
         progress('生成'+('顶面' if face=='top' else '底面')+'板层')
         images={}
@@ -649,7 +651,7 @@ def build(assets,out,files,config,progress):
     html=html.replace('${DATA.bom.length} 行 / 242 器件 + 1 保护膜','${DATA.bom.length} 行 / ${Object.keys(DATA.placements).length} 器件')
     html=re.sub(r"const ASSET_VERSION = [^;]+;",lambda m:'const ASSET_VERSION = '+json.dumps(str(__import__('time').time()))+';',html,count=1)
     (out/'index.html').write_text(html,encoding='utf8');shutil.copytree(assets/'vendor',out/'vendor',dirs_exist_ok=True)
-    report=dict(components=len(placements)-len(inferred_accessories),accessories=len(inferred_accessories),inferred_accessories=inferred_accessories,top=data['counts']['top'],bottom=data['counts']['bottom'],nc=sorted(set(nc)),xy_not_in_bom=xy_not_in_bom,bom_missing_coordinates=sorted(set(missing)),pending_components=pending,unmatched_footprints=sorted(set(unknown)),incomplete=bool(pending),excluded_rows=excluded_records,layers=layers,models=mapping,auto_pose=pose,warnings=warnings,board_mm=[w,h,th],origin_mm=[ox,oy],outline_basis=outline_basis,holes=len(holes),routed_slots=len(slots),drills=drill_reports,
+    report=dict(components=len(placements)-len(inferred_accessories),accessories=len(inferred_accessories),inferred_accessories=inferred_accessories,top=data['counts']['top'],bottom=data['counts']['bottom'],nc=sorted(set(nc)),xy_not_in_bom=xy_not_in_bom,bom_missing_coordinates=sorted(set(missing)),pending_components=pending,unmatched_footprints=sorted(set(unknown)),incomplete=bool(pending),excluded_rows=excluded_records,layers=layers,models=mapping,auto_pose=pose,warnings=warnings,board_mm=[w,h,th],origin_mm=[ox,oy],outline_basis=outline_basis,holes=len(holes),routed_slots=len(slots),duplicate_slots_removed=duplicate_slots,drills=drill_reports,
                 board_detection=board_detection,resolved_config=dict(width=w,height=h,thickness=th,radius=radius,gerber_x0=ox,gerber_y0=oy,xy_dx=num(config.get('xy_dx',0)),xy_dy=num(config.get('xy_dy',0))))
     (out/'导入检查.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
     (out/'待处理器件.json').write_text(json.dumps(pending,ensure_ascii=False,indent=2),encoding='utf8')

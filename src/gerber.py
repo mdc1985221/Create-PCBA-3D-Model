@@ -444,6 +444,40 @@ def polygon_area(points):
     return abs(sum(a[0]*b[1]-b[0]*a[1] for a, b in zip(points, points[1:]+points[:1]))/2)
 
 
+def deduplicate_slots(slots, tolerance=.001):
+    """Merge the same cutout from outline/ROU, independent of winding/sampling.
+
+    Require both matching bounds and a symmetric boundary distance <= 1 um.
+    Equal bounding boxes alone do not establish equal physical cutouts.
+    """
+    import numpy as np
+    kept, arrays, boxes = [], [], []
+    for points in slots:
+        clean=[]
+        for point in points:
+            p=[float(point[0]),float(point[1])]
+            if not clean or math.dist(p,clean[-1])>1e-9:clean.append(p)
+        if len(clean)>1 and math.dist(clean[0],clean[-1])<1e-9:clean.pop()
+        if len(clean)<3:raise ValueError('铣槽轮廓不足三个不同顶点，请核对板框与 ROU 文件')
+        a=np.asarray(clean);box=(*a.min(axis=0),*a.max(axis=0))
+        def follows(source,target):
+            end=np.roll(target,-1,axis=0);delta=end-target
+            length=np.sum(delta*delta,axis=1)
+            for start in range(0,len(source),128):
+                rel=source[start:start+128,None,:]-target[None,:,:]
+                t=np.clip(np.sum(rel*delta[None,:,:],axis=2)/np.maximum(length,1e-30),0,1)
+                distances=np.sum((rel-t[:,:,None]*delta[None,:,:])**2,axis=2)
+                if np.any(np.min(distances,axis=1)>tolerance*tolerance):return False
+            return True
+        duplicate=False
+        for b,other in zip(boxes,arrays):
+            if max(abs(x-y) for x,y in zip(box,b))<=tolerance and follows(a,other) and follows(other,a):
+                duplicate=True;break
+        if not duplicate:
+            kept.append(clean);arrays.append(a);boxes.append(box)
+    return kept,len(slots)-len(kept)
+
+
 def infer_board(primitives, points):
     """Choose the smallest closed outline enclosing the source XY positions.
 

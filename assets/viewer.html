@@ -232,6 +232,12 @@ document.getElementById('hudClose').onclick=()=>{setPanelCollapsed(true);panelTo
 
 /* ------------------------------------------------------------------ data */
 const ASSET_VERSION = '20261029-ref-search-assembly-v130';
+function showLoadError(error){
+  const label=document.getElementById('loadTxt');
+  if(label)label.textContent='预览加载失败：'+(error?.message||String(error))+'。可关闭预览后重试，或核对板框和铣槽资料。';
+}
+addEventListener('error',event=>showLoadError(event.error||event.message));
+addEventListener('unhandledrejection',event=>showLoadError(event.reason));
 const [DATA, PADS, MODELS, ALIGN, PADFIX, POSEFIX, BOARD_GEOMETRY, CALIBRATION, ALIGNMENT_PADS, MANUFACTURING] = await Promise.all([
   fetch('./data.json?v='+ASSET_VERSION).then(r => r.json()),
   fetch('./pads.json').then(r => r.json()),
@@ -503,11 +509,34 @@ for(const pts of BOARD_GEOMETRY.routed_slots){
   path.closePath();boardShape.holes.push(path);
 }
 
+async function loadBoardMeshes(){
+  document.getElementById('loadTxt').textContent='正在生成板体网格（后台计算）…';
+  const worker=new Worker('./vendor/board-mesh-worker.js?v='+ASSET_VERSION,{type:'module'});
+  try{
+    const packed=await new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('板框/槽孔网格计算超过 30 秒，请检查重复或相交轮廓')),30000);
+      worker.onmessage=({data})=>{clearTimeout(timer);data.error?reject(new Error(data.error)):resolve(data);};
+      worker.onerror=event=>{clearTimeout(timer);reject(new Error(event.message||'板体后台计算启动失败'));};
+      worker.postMessage({shape:boardShape.toJSON()});
+    });
+    const unpack=data=>{
+      const geometry=new THREE.BufferGeometry();
+      for(const [name,attribute] of Object.entries(data.attributes))geometry.setAttribute(name,new THREE.BufferAttribute(attribute.array,attribute.itemSize));
+      if(data.index)geometry.setIndex(new THREE.BufferAttribute(data.index,1));
+      return geometry;
+    };
+    return {core:unpack(packed.core),face:unpack(packed.face)};
+  }finally{worker.terminate();}
+}
+const BOARD_MESHES=await loadBoardMeshes();
+document.getElementById('loadTxt').textContent='正在放置器件…';
+
 function makePanelBody(detail) {
   const g = new THREE.Group();
   if (!boardShape) return g;
   // FR-4 core
-  const coreGeo = new THREE.ExtrudeGeometry(boardShape, { depth: T, bevelEnabled: false, curveSegments: 16 });
+  const coreGeo = BOARD_MESHES.core.clone();
+  coreGeo.scale(1,1,T);
   coreGeo.rotateX(Math.PI / 2);
   coreGeo.translate(0, T, 0);
   const core = new THREE.Mesh(coreGeo, M.fr4);
@@ -516,7 +545,8 @@ function makePanelBody(detail) {
 
   // soldermask on both faces
   for (const yy of [T, -MASK]) {
-    const mg = new THREE.ExtrudeGeometry(boardShape, { depth: MASK, bevelEnabled: false, curveSegments: 16 });
+    const mg = BOARD_MESHES.core.clone();
+    mg.scale(1,1,MASK);
     mg.rotateX(Math.PI / 2);
     mg.translate(0, yy + MASK, 0);
     const m = new THREE.Mesh(mg, M.mask);
@@ -527,7 +557,7 @@ function makePanelBody(detail) {
   // Gerber 生成的板面纹理：焊盘 / 丝印 / 字符全部来自生产文件，天然与板对齐
   {
     // 用板形本身生成贴图网格（含倒角），UV 归一化到 0..1 => 丝印/焊盘与板轮廓严格对齐
-    const sg = new THREE.ShapeGeometry(boardShape,16);
+    const sg = BOARD_MESHES.face.clone();
     const pos = sg.attributes.position;
     const uv = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) {
