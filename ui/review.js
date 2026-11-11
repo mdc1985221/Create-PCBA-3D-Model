@@ -21,19 +21,19 @@ function renderReview(){
   for(const role of ['bom','xy']){
     const root=$(role+'Review');root.replaceChildren();
     const table=document.createElement('table');table.className='review-table';
-    const head=document.createElement('tr');for(const name of ['行 / 状态','位号 / 物料','操作']){const th=document.createElement('th');th.textContent=name;head.append(th);}table.append(head);
+    const head=document.createElement('tr');for(const name of ['源文件行 / BOM 序号 / 状态','位号 / 物料','操作']){const th=document.createElement('th');th.textContent=name;head.append(th);}table.append(head);
     for(const row of reviewData[role+'_rows']){
       if(row.duplicates.length&&!row.excluded)duplicates++;
       if(!row.excluded&&(row.issues||[]).some(issue=>issue.includes('不符')||issue.includes('无效用量')))quantities++;
       if(query&&!JSON.stringify([row.refs,row.val,row.pkg,row.desc,row.name]).toLowerCase().includes(query))continue;
       const tr=document.createElement('tr'),status=document.createElement('td'),body=document.createElement('td'),action=document.createElement('td'),button=document.createElement('button');
       if(row.excluded)tr.className='review-excluded';
-      status.textContent='第 '+row.row+' 行'+(row.excluded?' · 已排除':!row.active?' · NC':'');
+      status.textContent=(row.location||'第 '+row.row+' 行')+(row.excluded?' · 已排除':!row.active?' · NC':'');
       const problems=[...(row.issues||[])];if(row.duplicates.length&&!problems.some(issue=>issue.includes('位号重复')))problems.push('重复位号：'+row.duplicates.join(', '));if(role==='bom'&&!row.excluded&&row.active){const refs=row.refs.filter(ref=>missing.has(ref));if(refs.length)problems.push('缺坐标：'+refs.join(', '));}
       body.textContent=row.refs.join(', ')+' · '+(row.name||row.val||row.pkg||'—');
       if(problems.length){const problem=document.createElement('div');problem.className='review-problem';problem.textContent=problems.join('；');body.append(problem);}
       button.textContent=row.excluded?'恢复此行':'排除此行';button.disabled=busy;
-      button.setAttribute('aria-label',(row.excluded?'恢复':'排除')+' '+role.toUpperCase()+' 第 '+row.row+' 行 '+row.refs.join(','));
+      button.setAttribute('aria-label',(row.excluded?'恢复':'排除')+' '+role.toUpperCase()+' '+(row.location||'第 '+row.row+' 行')+' '+row.refs.join(','));
       button.onclick=async()=>{if(busy)return;if(excludedRows[role].has(row.row))excludedRows[role].delete(row.row);else excludedRows[role].add(row.row);await refreshReview();};
       action.append(button);tr.append(status,body,action);table.append(tr);
     }

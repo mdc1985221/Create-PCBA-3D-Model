@@ -185,6 +185,7 @@ HEADERS={
  'code':['code','partnumber','partno','mpn','物料编码','物料代码','料号'],
  'populate':['populate','fitted','实装','装配','是否贴装'],
  'qty':['quantity','qty','数量','用量'],
+ 'seq':['序号','项次','itemno','itemnumber'],
 }
 def headernorm(x):
     x=re.sub(r'[（(]\s*(?:mm|mil|mils|deg|°)\s*[）)]','',str(x),flags=re.I)
@@ -211,7 +212,25 @@ def refs(s):
     if bad:raise ValueError('无法识别位号：'+','.join(bad)+'；请用逗号分隔，范围可写 R1-R3')
     return tokens
 
-def bom_duplicate_error(rr,previous,line,quantity=''):
+def bom_row_location(path,line,columns,row):
+    """Keep spreadsheet row numbers distinct from the BOM's item number."""
+    excel=Path(path).suffix.lower() in ('.xlsx','.xls')
+    label=('Excel 第 ' if excel else '第 ')+str(line)+' 行'
+    details=[]
+    index=columns.get('seq')
+    if index is not None and index<len(row) and str(row[index]).strip():
+        value=str(row[index]).strip()
+        if re.fullmatch(r'\d+\.0',value):value=value[:-2]
+        details.append('BOM 序号 '+value)
+    if excel:
+        column=columns['ref']+1;letters=''
+        while column:
+            column,remainder=divmod(column-1,26);letters=chr(65+remainder)+letters
+        details.append('位号单元格 '+letters+str(line))
+    if details:label+='（'+'；'.join(details)+'）'
+    return label
+
+def bom_duplicate_error(rr,previous,line,quantity='',location=None):
     """Report only duplicated references, with their original table rows."""
     counts=Counter(rr)
     within=sorted(ref for ref,count in counts.items() if count>1)
@@ -220,10 +239,10 @@ def bom_duplicate_error(rr,previous,line,quantity=''):
     if not duplicates:return ''
     details=[]
     if within:details.append('本行内重复：'+','.join(within))
-    if across:details.append('已出现在 '+', '.join(ref+'（第 '+str(previous[ref])+' 行）' for ref in across))
+    if across:details.append('已出现在 '+', '.join(ref+'（'+(previous[ref] if isinstance(previous[ref],str) else '第 '+str(previous[ref])+' 行')+'）' for ref in across))
     if quantity:details.append('用量 '+quantity)
     details.append('位号条目 '+str(len(rr))+'，不同位号 '+str(len(counts)))
-    return 'BOM 第 '+str(line)+' 行位号重复：'+','.join(duplicates)+'；'+'；'.join(details)+'。请核对原表位号和用量，未自动删减。'
+    return 'BOM '+(location or '第 '+str(line)+' 行')+'位号重复：'+','.join(duplicates)+'；'+'；'.join(details)+'。请核对原表位号和用量，未自动删减。'
 def num(s):
     m=re.fullmatch(r'\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?)\s*(?:mm|mils?|deg|°)?\s*',str(s),re.I)
     if not m:raise ValueError('无效数值：'+str(s))
@@ -327,13 +346,14 @@ def build(assets,out,files,config,progress):
                 excluded_records.append(dict(table='bom',row=line,refs=rr));continue
             v=getb('val');de=getb('desc')
             quantity=getb('qty')
-            duplicate_error=bom_duplicate_error(rr,seen_bom,line,quantity)
+            location=bom_row_location(inputs/Path(config['bom']).name,line,bc,row)
+            duplicate_error=bom_duplicate_error(rr,seen_bom,line,quantity,location)
             if duplicate_error:raise ValueError(duplicate_error)
-            seen_bom.update({ref:line for ref in rr})
+            seen_bom.update({ref:location for ref in rr})
             if not_fitted(getb('populate'),v):
                 for r in rr:placements.pop(r,None);nc.append(r)
                 continue
-            if quantity and num(quantity)!=len(rr):raise ValueError('BOM 第 '+str(line)+' 行数量与位号数不符：'+','.join(rr)+'；用量 '+quantity+'，不同位号 '+str(len(set(rr))))
+            if quantity and num(quantity)!=len(rr):raise ValueError('BOM '+location+'数量与位号数不符：'+','.join(rr)+'；用量 '+quantity+'，不同位号 '+str(len(set(rr))))
             bom_populated.update(rr)
             material_name=getb('name') or v;material_code=getb('code')
             bom.append(dict(refs=','.join(rr),qty=len(rr),val=v,desc=de,name=material_name,code=material_code))

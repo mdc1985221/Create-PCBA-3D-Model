@@ -8,11 +8,38 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from generator import bom_duplicate_error, build, refs
+from generator import bom_duplicate_error, bom_row_location, build, header, refs
 from input_support import inspect_files, review_files
 
 
 class BomImportTests(unittest.TestCase):
+    def test_excel_row_is_not_bom_item_number(self):
+        _, columns = header([['序号','物料编码','名称','描述','用量','位号']], ['ref'])
+        location = bom_row_location('module.xlsx', 46, columns, ['44','','','','10','R1,R1'])
+        self.assertEqual(location, 'Excel 第 46 行（BOM 序号 44；位号单元格 F46）')
+        message = bom_duplicate_error(['R1','R1'], {}, 46, '2', location)
+        self.assertIn(location+'位号重复：R1；', message)
+        self.assertNotIn('BOM 序号 46', message)
+
+    def test_no_sequence_column_does_not_invent_an_item_number(self):
+        self.assertEqual(bom_row_location('module.xlsx', 2, {'ref': 0}, ['R1']),
+                         'Excel 第 2 行（位号单元格 A2）')
+        self.assertEqual(bom_row_location('module.csv', 2, {'ref': 0}, ['R1']), '第 2 行')
+
+    def test_review_preserves_item_number_and_source_row(self):
+        content = '序号,用量,位号\n44,2,"R1,R1"\n46,1,R2\n'.encode()
+        rows = review_files({'module.csv': content}, {'bom': 'module.csv'}, {}, set())['bom_rows']
+        self.assertEqual(rows[0]['row'], 2)
+        self.assertIn('BOM 序号 44', rows[0]['location'])
+        self.assertIn('BOM 序号 44', rows[0]['issues'][0])
+        self.assertEqual(rows[1]['duplicates'], [])
+
+    def test_cross_row_error_keeps_both_item_numbers(self):
+        content = '序号,用量,位号\n44,1,R1\n46,1,R1\n'.encode()
+        row = review_files({'module.csv': content}, {'bom': 'module.csv'}, {}, set())['bom_rows'][1]
+        self.assertIn('第 3 行（BOM 序号 46）', row['issues'][0])
+        self.assertIn('第 2 行（BOM 序号 44）', row['issues'][0])
+
     def test_filename_is_not_required(self):
         files = {'module.csv': '位号,用量,值,封装\nR1,1,1K,R0402\n'.encode()}
         candidate = inspect_files(files)['candidates'][0]
