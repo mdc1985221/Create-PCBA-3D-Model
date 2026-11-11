@@ -1,7 +1,7 @@
 'use strict';
 const excludedRows={bom:new Set(),xy:new Set()};
 let reviewData=null,reviewVersion=0;
-function resetReview(){reviewVersion++;reviewData=null;excludedRows.bom.clear();excludedRows.xy.clear();for(const id of ['bomReview','xyReview','footprintReview'])$(id).replaceChildren();$('reviewStatus').textContent='';$('footprintStatus').textContent='导入资料后显示封装匹配情况。';}
+function resetReview(){reviewVersion++;reviewData=null;excludedRows.bom.clear();excludedRows.xy.clear();for(const id of ['bomReview','xyReview','footprintReview'])$(id).replaceChildren();$('reviewStatus').textContent='';$('footprintStatus').textContent='导入资料后显示封装匹配情况。';syncModelTargets();}
 async function removeSelectedFile(index){if(busy)return;selected.splice(index,1);await chooseFiles([]);}
 async function refreshReview(){
   const version=++reviewVersion;
@@ -46,14 +46,15 @@ function renderReview(){
   const table=document.createElement('table');table.className='review-table';
   for(const group of reviewData.footprints){
     if(group.model&&!$('showMatched').checked)continue;
-    const tr=document.createElement('tr'),label=document.createElement('td'),cell=document.createElement('td'),select=document.createElement('select');
+    const tr=document.createElement('tr'),label=document.createElement('td'),cell=document.createElement('td'),select=document.createElement('button'),load=document.createElement('button'),current=document.createElement('div'),context=document.createElement('div');
     label.textContent=(group.pkg||'(空封装)')+' ×'+group.refs.length;label.title=group.refs.join(', ');
-    select.setAttribute('aria-label','封装 '+(group.pkg||'(空封装)')+' 的模型');select.add(new Option('待匹配（暂不显示）',''));
-    for(const model of info.models)select.add(new Option(model.id,model.id));select.value=group.model;select.disabled=busy;
-    select.onchange=async()=>{if(busy)return;try{const mapping=parseObject('mapping','封装映射');if(select.value)mapping[group.pkg]=select.value;else delete mapping[group.pkg];$('mapping').value=JSON.stringify(mapping,null,2);await refreshReview();}catch(error){message(error.message,true);}};
-    cell.append(select);tr.append(label,cell);table.append(tr);
+    context.textContent=group.refs.slice(0,8).join(', ')+(group.refs.length>8?' …':'')+' · '+(group.examples||[]).join('；');context.className='footprint-context';label.append(context);
+    current.textContent=group.model||'待匹配（暂不显示）';current.className='small';select.textContent=group.model?'查看 / 更换模型':'选模型';select.setAttribute('aria-label','为 '+group.pkg+' 选择模型');select.disabled=busy||!group.pkg;select.onclick=()=>openModelChooser(group.pkg,group.model);
+    load.textContent='导入 STEP';load.disabled=busy||!group.pkg;load.onclick=()=>importForFootprint(group.pkg);if(!group.pkg)current.textContent='坐标 / BOM 中缺少封装名，请先补充源资料。';
+    cell.append(current,select,load);tr.append(label,cell);table.append(tr);
   }
   if(!table.children.length)root.textContent=reviewData.unmatched?'暂无可显示封装。':'所有有坐标器件已匹配；勾选上方可查看已有映射。';else root.append(table);
+  syncModelTargets();
 }
 $('reviewInputs').onclick=()=>refreshReview();
 $('reviewFilter').oninput=renderReview;

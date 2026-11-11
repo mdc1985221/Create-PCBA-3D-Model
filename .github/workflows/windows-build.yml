@@ -32,6 +32,8 @@ jobs:
         run: |
           python scripts/test_bom_import.py
           node scripts/test_bom_selection.cjs
+          python scripts/test_model_binding.py
+          node scripts/test_model_import_ui.cjs
           python scripts/test_board_cutouts.py
           node scripts/test_board_worker.mjs
           python src/app.py --self-test

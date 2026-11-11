@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.4"
+VERSION = "1.3.5"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -109,17 +109,18 @@ class Application:
         return value
 
     def info(self):
+        from user_models import model_summary
         library = self.library()
         builtins = read_json(self.assets / "aliases.json", {})
         user = self.user_aliases()
         return dict(version=VERSION, default_output=str(self.default_output), token=self.token,
-                    models=[dict(id=k, parts=len(v.get("parts", []))) for k, v in sorted(library.items())],
+                    models=[model_summary(k,v,{**builtins,**user}) for k,v in sorted(library.items())],
                     aliases={**builtins, **user}, user_aliases=user, alias_path=str(self.alias_path),
                     sample_available=(self.assets / "sample" / "index.html").is_file(),
                     max_upload_mb=100)
 
     def model_operation(self, route, request):
-        from user_models import import_step, stage_parametric, commit
+        from user_models import import_step, stage_parametric, commit, binding_aliases, read_catalog
         import ai_support
         if route == '/api/ai/settings':
             return ai_support.save_settings(self.home, request)
@@ -141,9 +142,18 @@ class Application:
             if route == '/api/models/parametric':
                 return stage_parametric(self.home, request.get('name'), request.get('spec'))
             if route == '/api/models/commit':
-                result = commit(self.home, request.get('draft'), request.get('footprint'))
-                self.save_aliases({**self.user_aliases(), result['footprint']: result['model']})
+                draft=request.get('draft');footprint=request.get('footprint')
+                if not re.fullmatch(r'[a-f0-9]{24}',str(draft)):raise ValueError('模型草稿编号无效')
+                draft_models=read_catalog(self.home/'模型草稿'/draft)
+                if len(draft_models)!=1:raise ValueError('模型草稿不存在')
+                updated=binding_aliases(self.user_aliases(),footprint,next(iter(draft_models)),draft_models) if footprint is not None else None
+                result = commit(self.home, draft, footprint)
+                if updated is not None:self.save_aliases(updated)
                 return result
+            if route == '/api/models/bind':
+                updated=binding_aliases(self.user_aliases(),request.get('footprint'),request.get('model'),self.library())
+                self.save_aliases(updated)
+                return dict(saved=True,footprint=request['footprint'].strip(),model=request['model'])
             if route == '/api/ai/generate':
                 return dict(spec=ai_support.generate_spec(self.home, request.get('description', '')))
             if route == '/api/ai/search':
@@ -431,6 +441,18 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(ai_support.settings(self.app.home, public=True))
             if url.path.startswith('/model-vendor/'):
                 return self.file(self.app.assets / 'vendor', unquote(url.path[len('/model-vendor/'):]))
+            if url.path.startswith('/library-preview/'):
+                from user_models import PREVIEW_HTML
+                pieces=unquote(url.path).split('/',3)
+                if len(pieces)!=4 or pieces[3] not in {'index.html','models.json'}:
+                    return self.respond({'error':'模型预览不存在'},404)
+                key=pieces[2];library=self.app.library()
+                if key not in library:return self.respond({'error':'模型不存在'},404)
+                if pieces[3]=='models.json':return self.respond({key:library[key]})
+                body=PREVIEW_HTML.encode('utf8')
+                self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8')
+                self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store')
+                self.end_headers();self.wfile.write(body);return
             if url.path.startswith('/model-preview/'):
                 pieces=unquote(url.path).split('/',3)
                 if len(pieces)!=4 or not re.fullmatch(r'[a-f0-9]{24}',pieces[2]):
@@ -500,7 +522,7 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(request, dict):
                 raise ValueError("请求格式错误")
             path = urlsplit(self.path).path
-            if path in {'/api/ai/settings','/api/ai/generate','/api/ai/search','/api/ai/test','/api/ai/datasheet','/api/models/import','/api/models/parametric','/api/models/commit'}:
+            if path in {'/api/ai/settings','/api/ai/generate','/api/ai/search','/api/ai/test','/api/ai/datasheet','/api/models/import','/api/models/parametric','/api/models/commit','/api/models/bind'}:
                 return self.respond(self.app.model_operation(path,request))
             if path == "/api/inspect":
                 return self.respond(inspect_files(decode_uploads(request.get("files", []))))

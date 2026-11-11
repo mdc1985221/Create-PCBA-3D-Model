@@ -1,20 +1,32 @@
 'use strict';
 (()=>{
-  let draft=null,working=false;
+  let draft=null,working=false,previewReady=false,draftModel='';
   const actionIds=['prepareModel','prepareParametric','commitModel','generateAiModel','searchAiModel','loadAiSettings','saveAiSettings','clearAiKeys','testAiConnection','readDatasheet'];
   function status(text,error=false){$('modelStatus').classList.remove('hidden');$('modelStatus').textContent=text;$('modelStatus').style.color=error?'#a12d27':'';}
   async function act(fn){
     if(working||busy){status('正在处理，请等待当前任务完成。',true);return;}
-    working=true;lock(true);actionIds.forEach(id=>$(id).disabled=true);
+    working=true;lock(true);actionIds.forEach(id=>$(id).disabled=true);document.querySelectorAll('#modelManager input,#modelManager select,#modelManager textarea').forEach(control=>control.disabled=true);
     try{await fn();}catch(error){status(error.message,true);}
-    finally{working=false;lock(false);actionIds.forEach(id=>$(id).disabled=false);$('commitModel').disabled=!draft;}
+    finally{working=false;lock(false);actionIds.forEach(id=>$(id).disabled=false);document.querySelectorAll('#modelManager input,#modelManager select,#modelManager textarea').forEach(control=>control.disabled=false);updateImportTarget();$('commitModel').disabled=!draft||!previewReady;}
   }
   function newDraft(result){
-    draft=result.draft;$('modelPreview').src=result.preview;$('modelPreview').classList.remove('hidden');
-    status(`待保存模型：${result.model}\n尺寸 XYZ：${result.dimensions_mm.map(v=>v.toFixed(3)).join(' × ')} mm；${result.solids} 个实体\n${(result.notes||[]).join('\n')}\n核对预览、方向和贴板原点后，点击“确认保存模型并绑定封装”。`);
+    draft=result.draft;draftModel=result.model;previewReady=false;$('modelPreview').src=result.preview;$('modelPreview').classList.remove('hidden');
+    status(`待保存模型：${result.model}\n长 X × 宽 Y × 高 Z：${result.dimensions_mm.map(v=>v.toFixed(3)).join(' × ')} mm；${result.solids} 个实体\n${(result.notes||[]).join('\n')}\n核对预览、方向和贴板原点后确认保存。`);
     $('modelManager').open=true;
   }
+  function invalidate(){if(!draft)return;draft=null;previewReady=false;draftModel='';$('commitModel').disabled=true;$('modelPreview').removeAttribute('src');$('modelPreview').classList.add('hidden');status('模型文件或参数已变化，请重新预览后保存。');}
+  for(const id of ['customModelName','customMaterial','customOrigin','customRx','customRy','customRz','customOx','customOy','customOz','modelSpec'])$(id).addEventListener('input',invalidate);
+  $('customModelFile').addEventListener('change',()=>{
+    invalidate();const file=$('customModelFile').files[0];if(!file)return;
+    let base=file.name.replace(/\.(step|stp)$/i,'').replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^USER_/i,'').slice(0,54)||'ImportedModel',name=base,index=2;
+    while(info?.models.some(m=>m.id==='USER_'+name))name=base+'_'+index++;
+    $('customModelName').value=name;
+  });
+  window.addEventListener('message',event=>{
+    if(event.origin===location.origin&&event.source===$('modelPreview').contentWindow&&event.data?.type==='pcba-model-preview-ready'&&event.data.model===draftModel&&draft){previewReady=true;$('commitModel').disabled=working;}
+  });
   $('prepareModel').onclick=()=>act(async()=>{
+    invalidate();importFootprint();
     const file=$('customModelFile').files[0];if(!file)throw Error('请先选择 STEP / STP 模型文件。');
     if(!/\.(step|stp)$/i.test(file.name)||file.size>30*1024*1024)throw Error('请选择不超过 30 MB 的 STEP / STP 文件。');
     status('读取并网格化模型，请稍候…');
@@ -25,16 +37,16 @@
     newDraft(await api('/api/models/import',{name:$('customModelName').value.trim(),filename:file.name,data:uploaded.data,options}));
   });
   $('prepareParametric').onclick=()=>act(async()=>{
+    invalidate();importFootprint();
     let spec;try{spec=JSON.parse($('modelSpec').value);}catch{throw Error('参数模型 JSON 格式错误。');}
     status('生成参数模型与预览…');newDraft(await api('/api/models/parametric',{name:$('customModelName').value.trim(),spec}));
   });
   $('commitModel').onclick=()=>act(async()=>{
-    if(!draft)throw Error('请先预览一个模型。');
-    const footprint=$('customFootprint').value.trim();if(!footprint)throw Error('请填写生产坐标表中的封装名。');
+    if(!draft||!previewReady)throw Error('请先等待模型预览完成。');
+    const footprint=importFootprint();const mapping=footprint?projectBinding(parseObject('mapping','封装映射'),footprint,draftModel):null;
     const result=await api('/api/models/commit',{draft,footprint});
-    info=await api('/api/info');$('mapping').value=JSON.stringify({...parseObject('mapping','封装映射'),...info.user_aliases},null,2);
-    $('libraryCount').textContent='('+info.models.length+' 个模型)';renderModels();void refreshReview();draft=null;
-    status(`已加入本地模型库：${result.model}\n封装 ${result.footprint} 已绑定。重新生成 PCBA 即可使用；下次启动也能复用。\n${result.library}`);
+    if(mapping)$('mapping').value=JSON.stringify(mapping,null,2);await refreshModelLibrary();await refreshReview();draft=null;previewReady=false;
+    status(`已加入本地模型库：${result.model}\n${result.footprint?'封装 '+result.footprint+' 已绑定。重新生成 PCBA 后生效。':'仅保存到库，未绑定任何封装。可从“选模型”窗口绑定。'}\n${result.library}`);
   });
   function showSettings(cfg){
     $('aiEnabled').checked=cfg.enabled;$('aiBase').value=cfg.base_url;$('aiModel').value=cfg.model;
@@ -67,7 +79,7 @@
   $('generateAiModel').onclick=()=>act(async()=>{
     status('正在调用配置的 AI 接口，仅发送当前器件说明…');
     const result=await api('/api/ai/generate',{description:$('aiDescription').value});
-    $('modelSpec').value=JSON.stringify(result.spec,null,2);$('modelManager').open=true;
+    invalidate();$('modelSpec').value=JSON.stringify(result.spec,null,2);$('modelManager').open=true;
     status('AI 参数草稿已写入上方 JSON。请核对尺寸，填写新模型名称，再点击“预览参数模型”；确认后保存入库。');
   });
   $('searchAiModel').onclick=()=>act(async()=>{

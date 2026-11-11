@@ -156,12 +156,14 @@ def review_files(files, config, model_aliases, model_ids):
                 if item['active']:
                     if role == 'xy':
                         for ref in rr:
-                            placements.setdefault(ref, dict(pkg=item['pkg'], ref=ref))
+                            placements.setdefault(ref, dict(pkg=item['pkg'], ref=ref, val=item['val'], desc=item['desc'], name=item['name']))
                     else:
                         populated.update(rr)
                         for ref in rr:
-                            if ref in placements and not placements[ref]['pkg']:
-                                placements[ref]['pkg'] = item['pkg']
+                            if ref in placements:
+                                if not placements[ref]['pkg']:placements[ref]['pkg'] = item['pkg']
+                                for key in ('val','desc','name'):
+                                    if item[key]:placements[ref][key]=item[key]
             result[role + '_rows'].append(item)
     by_norm = {norm(key): value for key, value in {**model_aliases, **config.get('mapping', {})}.items()}
     groups = {}
@@ -172,8 +174,10 @@ def review_files(files, config, model_aliases, model_ids):
         model = by_norm.get(norm(pkg), pkg if pkg in model_ids else '')
         if model not in model_ids:
             model = ''
-        group = groups.setdefault(pkg, dict(pkg=pkg, model=model, refs=[]))
+        group = groups.setdefault(pkg, dict(pkg=pkg, model=model, refs=[], examples=[]))
         group['refs'].append(ref)
+        example=' · '.join(dict.fromkeys(placement[key] for key in ('name','val','desc') if placement.get(key)))
+        if example and example not in group['examples'] and len(group['examples'])<3:group['examples'].append(example)
     result['footprints'] = sorted(groups.values(), key=lambda item: (bool(item['model']), item['pkg']))
     result['missing_coordinates'] = sorted(populated - set(placements))
     result['matched'] = sum(len(item['refs']) for item in result['footprints'] if item['model'])

@@ -28,6 +28,35 @@ def model_id(name):
     return 'USER_'+name
 
 
+def model_summary(key,model,aliases=None):
+    """Small searchable library entry; dimensions are board X/Y/height in mm."""
+    low=[math.inf]*3;high=[-math.inf]*3
+    for part in model.get('parts',[]):
+        vertices=part.get('v',[])
+        for index in range(0,len(vertices)-2,3):
+            for axis in range(3):
+                low[axis]=min(low[axis],vertices[index+axis]);high[axis]=max(high[axis],vertices[index+axis])
+    size=[high[i]-low[i] for i in (0,2,1)] if all(math.isfinite(v) for v in low+high) else []
+    source=model.get('source',{})
+    return dict(id=key,parts=len(model.get('parts',[])),dimensions_mm=size,
+                aliases=sorted(k for k,v in (aliases or {}).items() if v==key),
+                source_file=source.get('file','') if isinstance(source,dict) else str(source),
+                mount_type=model.get('mount_type',''))
+
+
+def binding_aliases(aliases,footprint,model,model_ids):
+    from generator import norm
+    if not isinstance(footprint,str) or not footprint.strip() or len(footprint)>200:
+        raise ValueError('请选择生产资料中的完整封装名')
+    footprint=footprint.strip()
+    if not norm(footprint):raise ValueError('封装名无效')
+    if model not in model_ids:raise ValueError('所选模型不存在，请重新打开模型选择窗口')
+    # A normalized spelling must have exactly one reusable binding.
+    result={key:value for key,value in aliases.items() if norm(key)!=norm(footprint)}
+    result[footprint]=model
+    return result
+
+
 def bounds(shape):
     from OCP.Bnd import Bnd_Box
     from OCP.BRepBndLib import BRepBndLib
@@ -93,7 +122,10 @@ def stage(home,name,groups,options,source,notes=None):
     from OCP.TopAbs import TopAbs_SOLID
     from OCP.TopExp import TopExp_Explorer
     import numpy as np
-    key=model_id(name);draft=secrets.token_hex(12);root=Path(home)/'模型草稿'/draft
+    key=model_id(name)
+    if key in read_catalog(Path(home)/'用户模型库'):
+        raise ValueError('模型名 '+key+' 已存在，请使用已有模型或换一个名称后重新预览')
+    draft=secrets.token_hex(12);root=Path(home)/'模型草稿'/draft
     root.mkdir(parents=True)
     rotation=finite_vector(options.get('rotation',[0,0,0]),'XYZ 旋转',360)
     rx,ry,rz=map(math.radians,rotation)
@@ -220,26 +252,45 @@ def stage_parametric(home,name,spec):
                  ['AI 参数模型是尺寸近似，保存前请核对规格书、引脚节距和原点；复杂外壳建议导入原厂 STEP。'])
 
 
-def commit(home,draft,footprint):
+def commit(home,draft,footprint=None):
     if not re.fullmatch(r'[a-f0-9]{24}',str(draft)):raise ValueError('模型草稿编号无效')
-    if not isinstance(footprint,str) or not footprint.strip() or len(footprint)>200:raise ValueError('请填写生产坐标表中的封装名')
+    if footprint is not None and (not isinstance(footprint,str) or not footprint.strip() or len(footprint)>200):raise ValueError('请选择生产坐标表中的完整封装名，或选择仅保存到库')
     home=Path(home);root=home/'模型草稿'/draft
     models=read_catalog(root)
     if len(models)!=1:raise ValueError('模型草稿不存在')
     key=next(iter(models));library=home/'用户模型库';catalog=read_catalog(library)
-    if key in catalog:raise ValueError('此模型名已存在；请换一个名称，避免覆盖已校准模型')
+    if key in catalog:
+        if catalog[key]==models[key]:return dict(model=key,footprint=footprint.strip() if footprint else None,library=str(library),already_saved=True)
+        raise ValueError('此模型名已存在；请换一个名称，避免覆盖已校准模型')
     for part in models[key]['native_step_parts']:
         relative=part['path'];target=library/relative;target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(root/relative,target)
     catalog.update(models);write_json(library/'models.json',catalog)
-    return dict(model=key,footprint=footprint.strip(),library=str(library))
+    return dict(model=key,footprint=footprint.strip() if footprint else None,library=str(library))
 
 
-PREVIEW_HTML='''<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#161b22;color:#eee;font:13px sans-serif}#hint{position:absolute;top:8px;left:10px;pointer-events:none}canvas{display:block}</style><div id="hint">模型坐标：X 横向，Y 高度，Z=-板内 Y；拖动旋转，滚轮缩放</div><script type="importmap">{"imports":{"three":"/model-vendor/three.module.js"}}</script><script type="module">
+PREVIEW_HTML='''<!doctype html><meta charset="utf-8"><style>html,body{width:100%;height:100%;overflow:hidden}body{margin:0;background:#161b22;color:#eee;font:12px sans-serif}#tools{position:absolute;top:8px;left:10px;right:8px;z-index:2}button{background:#303a48;border:1px solid #657183;color:#eee;padding:5px 9px;border-radius:4px;cursor:pointer}#hint{margin-top:6px;line-height:1.5;pointer-events:none}canvas{display:block}</style><div id="tools"><button id="iso">等轴</button> <button id="top">顶视 / 引脚分布</button> <button id="bottom">底视</button> <button id="front">侧视 / 高度</button><div id="hint">正在载入模型…</div></div><script type="importmap">{"imports":{"three":"/model-vendor/three.module.js"}}</script><script type="module">
 import * as T from 'three';import {OrbitControls} from '/model-vendor/OrbitControls.js';
+const hint=document.getElementById('hint');
+function failed(error){hint.textContent='模型预览失败：'+(error?.message||String(error));}
+addEventListener('error',event=>failed(event.error||event.message));addEventListener('unhandledrejection',event=>failed(event.reason));
 const data=await (await fetch('./models.json')).json(),model=Object.values(data)[0],scene=new T.Scene();
-const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.01,3000),renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);document.body.append(renderer.domElement);
+const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.01,3000),renderer=new T.WebGLRenderer({antialias:true});renderer.setClearColor(0x161b22);renderer.setSize(innerWidth,innerHeight);document.body.append(renderer.domElement);
 scene.add(new T.HemisphereLight(0xffffff,0x555566,3));const light=new T.DirectionalLight(0xffffff,3);light.position.set(20,30,40);scene.add(light);const root=new T.Group();scene.add(root);
-for(const part of model.parts){const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(part.v,3));geo.setIndex(part.i);geo.computeVertexNormals();const rgb=model.materials[part.mat]||[.2,.2,.2];const mat=new T.MeshStandardMaterial({color:new T.Color(...rgb),roughness:.5,metalness:.15,side:T.DoubleSide});root.add(new T.Mesh(geo,mat));}
-const box=new T.Box3().setFromObject(root),size=box.getSize(new T.Vector3()),centre=box.getCenter(new T.Vector3()),d=Math.max(size.x,size.y,size.z,1)*2.4;const controls=new OrbitControls(camera,renderer.domElement);controls.target.copy(centre);camera.position.copy(centre).add(new T.Vector3(d,d,d));scene.add(new T.AxesHelper(Math.max(size.x,size.y,size.z)*.7));controls.update();renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+const baseColours={'PIN-01':0xd0d5db,'PIN-02':0xd0d5db,'IC-BODY-EPOXY-04':0x1a1c21,'IC-LABEL-01':0x2a2d33,'RES-SMD-01':0x15171b,'CAP-CERAMIC-06':0xb8864f,'CAP-CERAMIC-05':0xb8864f,'PLASTIC-WHITE-01':0xe9e7dc,'PLASTIC-BLACK-01':0x1e2024,'FERRITE-01':0x35383b,'FERRITE-DARK-01':0x242627,'MOLDED-GRAY':0x626363,'CORE-GRAY':0x303333,'MARK-GRAY':0x929792,'MARK-DARK':0x2b2c2a};
+for(const part of model.parts){const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(part.v,3));geo.setIndex(part.i);geo.computeVertexNormals();const rgb=model.materials?.[part.mat],color=rgb?new T.Color(...rgb):new T.Color(baseColours[part.mat]??0x33363a);const mat=new T.MeshStandardMaterial({color,roughness:.5,metalness:part.mat.startsWith('PIN-')?.9:.15,side:T.DoubleSide});root.add(new T.Mesh(geo,mat));}
+const box=new T.Box3().setFromObject(root),size=box.getSize(new T.Vector3()),centre=box.getCenter(new T.Vector3()),span=Math.max(size.x,size.y,size.z,1);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.copy(centre);
+const grid=new T.GridHelper(span*1.5,10,0x47a977,0x354c44);grid.material.transparent=true;grid.material.opacity=.5;scene.add(grid);
+for(const [direction,colour] of [[[1,0,0],0xe76f62],[[0,0,-1],0x68ce8a],[[0,1,0],0x69a8ed]])scene.add(new T.ArrowHelper(new T.Vector3(...direction),new T.Vector3(),span*.65,colour,span*.07,span*.04));
+const origin=new T.Mesh(new T.SphereGeometry(span*.014,12,8),new T.MeshBasicMaterial({color:0xffd26e}));scene.add(origin);
+function view(name){const distance=span*2.5/Math.min(1,camera.aspect);camera.up.set(0,1,0);let direction;
+ if(name==='top'){direction=new T.Vector3(0,1,0);camera.up.set(0,0,-1);}
+ else if(name==='bottom'){direction=new T.Vector3(0,-1,0);camera.up.set(0,0,1);}
+ else if(name==='front')direction=new T.Vector3(0,0,1);else direction=new T.Vector3(1,1,1).normalize();
+ camera.position.copy(centre).addScaledVector(direction,distance);controls.target.copy(centre);controls.update();}
+for(const name of ['iso','top','bottom','front'])document.getElementById(name).onclick=()=>view(name);view('iso');
+hint.textContent='长 X × 宽 Y × 高 Z：'+[size.x,size.z,size.y].map(v=>v.toFixed(3)).join(' × ')+' mm。绿格为贴板面，黄点为放置原点；红 X / 绿 Y / 蓝 Z。拖动旋转，滚轮缩放。';
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+parent.postMessage({type:'pcba-model-preview-ready',model:Object.keys(data)[0]},location.origin);
 </script>'''
