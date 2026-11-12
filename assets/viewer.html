@@ -130,6 +130,14 @@
       <label class="chk"><input type="checkbox" id="cTag"> 位号浮标</label>
     </div>
 
+    <!-- BOARD_COLOUR_UI -->
+    <div class="sec" id="boardColourPanel">
+      <div class="t">PCB 颜色</div>
+      <div id="boardColours" role="group" aria-label="PCB 阻焊颜色" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"></div>
+      <div id="boardColourStatus" role="status" style="margin-top:7px;font-size:10px;color:#a8b5c8;line-height:1.6">切换即预览，自动保存到当前工程。</div>
+      <button id="boardColourRetry" type="button" hidden style="margin-top:6px">重试保存板色</button>
+    </div>
+    <!-- /BOARD_COLOUR_UI -->
     <div class="sec">
       <div class="t">查找与核对</div>
       <form id="refSearchForm" class="row"><input id="refSearch" aria-label="查找位号" placeholder="输入位号，如 R43" list="refSuggestions" autocomplete="off"><button type="submit">定位</button></form>
@@ -1184,6 +1192,7 @@ function calibrationPick(ev){
   calEl('calDx').value=Number(calEl('calDx').value)+nearest.pad[0]-calPinPoint[0];calEl('calDy').value=Number(calEl('calDy').value)+nearest.pad[1]-calPinPoint[1];calPickStage='';calPinPoint=null;calDraft();
 }
 calEl('calExport').onclick=async()=>{
+  if(boardPending||boardSaving){calMessage('请先完成板色保存，再导出 STP。');return;}
   if(calBusy||calDirty.size)return;calBusy=true;calLocks();calEl('calDownload').hidden=true;
   try{await calApi('/api/project/export',{});calMessage('正在按已保存校准导出 STP…');
     for(;;){await new Promise(resolve=>setTimeout(resolve,1000));const r=await fetch('/api/job?id='+calJobId),job=await r.json();if(!r.ok)throw new Error(job.error);calMessage(job.messages?.at(-1)||'正在导出 STP…');if(job.state==='running')continue;if(job.state!=='done')throw new Error(job.error||'STP 导出失败');const step=job.downloads.find(item=>/\.(stp|step)$/i.test(item.name));if(step){calEl('calDownload').href=step.url;calEl('calDownload').download=step.name;calEl('calDownload').hidden=false;}calMessage('校准 STP 已导出并回读验证通过。');break;}
@@ -1517,6 +1526,7 @@ try{const result=JSON.parse(sessionStorage.getItem(modelRefreshKey)||'null');if(
 const modelRefreshChannel=calJobId?new BroadcastChannel('pcba-project-'+calJobId):null;
 if(modelRefreshChannel)modelRefreshChannel.onmessage=event=>{if(event.data?.type==='check-dirty')modelRefreshChannel.postMessage({type:'dirty-result',nonce:event.data.nonce,dirty:calDirty.size});};
 modelRefreshButton.onclick=async()=>{
+  if(boardPending||boardSaving){modelRefreshStatus.textContent='请先完成板色保存，再刷新。';return;}
   if(calDirty.size){modelRefreshStatus.textContent='还有未保存的校准，请先保存或撤销，再刷新。';return;}
   if(calBusy)return;calBusy=true;calLocks();modelRefreshButton.disabled=true;modelRefreshStatus.textContent='正在应用最新绑定，保留已保存的校准…';
   try{const result=await calApi('/api/project/refresh',{});const text=result.changed?`已刷新：新增 ${result.added.length} 个器件，更新 ${result.replaced.length} 个；还需处理 ${result.pending} 个。`:`当前已是最新绑定；还需处理 ${result.pending} 个。`;
@@ -1527,6 +1537,78 @@ modelRefreshButton.onclick=async()=>{
 const refreshedFocus=new URLSearchParams(location.search).get('focus');
 if(refreshedFocus&&refLookup.has(refreshedFocus.toUpperCase())){document.getElementById('refSearch').value=refreshedFocus;document.getElementById('refSearchForm').requestSubmit();}
 /* /MODEL_REFRESH_SCRIPT */
+/* BOARD_COLOUR_SCRIPT */
+const BOARD_THEMES = {"green":{"label":"绿色","base":[16,77,46],"copper":[18,83,49],"silk":[225,229,216],"rough":175,"coat":0.16},"red":{"label":"红色","base":[133,19,25],"copper":[150,24,31],"silk":[225,229,216],"rough":175,"coat":0.16},"yellow":{"label":"黄色","base":[193,151,15],"copper":[211,171,22],"silk":[35,37,40],"rough":185,"coat":0.12},"blue":{"label":"蓝色","base":[13,46,125],"copper":[17,55,145],"silk":[225,229,216],"rough":175,"coat":0.16},"white":{"label":"白色","base":[216,220,218],"copper":[228,231,229],"silk":[35,37,40],"rough":195,"coat":0.08},"black":{"label":"哑黑色","base":[15,17,20],"copper":[23,25,29],"silk":[225,229,216],"rough":225,"coat":0.015}};
+const boardColourStatus=document.getElementById('boardColourStatus');
+const boardColourRetry=document.getElementById('boardColourRetry');
+const boardColourGroup=document.getElementById('boardColours');
+const boardInitial=await fetch('./board_appearance.json?v='+Date.now()).then(r=>r.ok?r.json():{color:'green'}).catch(()=>({color:'green'}));
+let boardSaved=BOARD_THEMES[boardInitial.color]?boardInitial.color:'green',boardWanted=boardSaved,boardSaving=false,boardPending=false;
+const boardSource=BOARD_THEMES[boardSaved];
+let boardCanvases=null;
+function boardPixelMatches(p,i,c){return p[i]===c[0]&&p[i+1]===c[1]&&p[i+2]===c[2];}
+function boardPrepareCanvases(){
+  return [TEX_TOP,TEX_BOT].map((texture,side)=>{
+    const canvas=document.createElement('canvas');canvas.width=texture.image.width;canvas.height=texture.image.height;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(texture.image,0,0);
+    const image=ctx.getImageData(0,0,canvas.width,canvas.height),pixels=image.data,classes=new Uint8Array(pixels.length/4);
+    for(let i=0;i<pixels.length;i+=4){
+      classes[i/4]=boardPixelMatches(pixels,i,boardSource.base)?1:boardPixelMatches(pixels,i,boardSource.copper)?2:boardPixelMatches(pixels,i,boardSource.silk)?3:0;
+    }
+    const rough=[ROUGH_TOP,ROUGH_BOT][side],roughCanvas=document.createElement('canvas');roughCanvas.width=canvas.width;roughCanvas.height=canvas.height;
+    const roughCtx=roughCanvas.getContext('2d',{willReadFrequently:true});roughCtx.drawImage(rough.image,0,0);
+    const roughImage=roughCtx.getImageData(0,0,canvas.width,canvas.height);
+    texture.image=canvas;rough.image=roughCanvas;
+    return {texture,ctx,image,classes,rough,roughCtx,roughImage};
+  });
+}
+function boardApplyColour(key){
+  const preset=BOARD_THEMES[key];boardCanvases??=boardPrepareCanvases();
+  for(const data of boardCanvases){
+    const {image,classes,roughImage}=data;
+    for(let j=0;j<classes.length;j++){
+      const kind=classes[j];if(!kind)continue;
+      const rgb=kind===1?preset.base:kind===2?preset.copper:preset.silk,i=j*4;
+      image.data[i]=rgb[0];image.data[i+1]=rgb[1];image.data[i+2]=rgb[2];
+      if(kind<3)roughImage.data[i]=roughImage.data[i+1]=roughImage.data[i+2]=preset.rough;
+    }
+    data.ctx.putImageData(image,0,0);data.texture.needsUpdate=true;
+    data.roughCtx.putImageData(roughImage,0,0);data.rough.needsUpdate=true;
+  }
+  const asHex=rgb=>'#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');
+  M.mask.color.set(asHex(preset.copper));M.maskPlug.color.set(asHex(preset.base));
+  M.mask.clearcoat=M.surfTop.clearcoat=M.surfBot.clearcoat=preset.coat;
+  M.mask.roughness=preset.rough/255;M.silk.color.set(asHex(preset.silk));
+  for(const button of boardColourGroup.children){const active=button.dataset.color===key;button.classList.toggle('on',active);button.setAttribute('aria-pressed',String(active));}
+}
+async function boardSaveColour(){
+  if(boardSaving)return;boardSaving=true;boardColourRetry.hidden=true;
+  try{
+    while(boardPending){
+      const key=boardWanted;boardColourStatus.textContent=BOARD_THEMES[key].label+' · 正在保存…';
+      await calApi('/api/project/appearance',{color:key});boardSaved=key;boardPending=boardWanted!==boardSaved;
+      // Existing downloads describe the previous board colour.
+      const link=document.getElementById('calDownload');if(link)link.hidden=true;
+    }
+    boardColourStatus.textContent=BOARD_THEMES[boardSaved].label+' · 已保存。图片同步当前颜色；STP 请重新导出。';
+  }catch(error){
+    boardPending=true;boardColourStatus.textContent='当前仅为预览，板色未保存：'+error.message;boardColourRetry.hidden=false;
+  }finally{boardSaving=false;}
+}
+for(const [key,preset] of Object.entries(BOARD_THEMES)){
+  const button=document.createElement('button');button.type='button';button.dataset.color=key;
+  button.style.cssText='display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 2px;white-space:nowrap';
+  const swatch=document.createElement('span');swatch.style.cssText='width:10px;height:10px;flex-shrink:0;border-radius:50%;border:1px solid #89909b;background:rgb('+preset.base.join(',')+')';
+  button.append(swatch,document.createTextNode(preset.label));button.title='双面阻焊同步切换为'+preset.label+'，自动保存';
+  button.onclick=()=>{boardWanted=key;boardApplyColour(key);if(key!==boardSaved||boardPending){boardPending=true;boardColourRetry.hidden=true;boardSaveColour();}};
+  boardColourGroup.append(button);
+}
+boardColourRetry.onclick=boardSaveColour;
+// Restore material finish too; PNGs already contain the saved palette.
+boardApplyColour(boardSaved);boardColourStatus.textContent=BOARD_THEMES[boardSaved].label+' · 切换即预览，自动保存。';
+addEventListener('beforeunload',event=>{if(boardPending||boardSaving){event.preventDefault();event.returnValue='板色尚未保存';}});
+/* /BOARD_COLOUR_SCRIPT */
+
 </script>
 </body>
 </html>

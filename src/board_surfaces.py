@@ -67,6 +67,8 @@ def inside(point,polygon):
 
 
 def board_layers(project,w,h,geo):
+    from board_appearance import appearance,theme
+    silk=tuple(theme(appearance(project)['color'])['silk'])
     layers=[]
     for side in ('top','bot'):
         filename=Path(project)/('board_'+side+'.png')
@@ -85,7 +87,7 @@ def board_layers(project,w,h,geo):
         for points in geo.get('routed_slots',[]):
             polygon=[px(q) for q in points];draw.polygon(polygon,fill=0);draw.line(polygon+polygon[:1],fill=0,width=3)
         valid=np.asarray(keep,dtype=bool)
-        for kind,colour in [('PADS',(178,186,190)),('SILK',(225,229,216)),('EXPOSED_FR4',(143,130,81))]:
+        for kind,colour in [('PADS',(178,186,190)),('SILK',silk),('EXPOSED_FR4',(143,130,81))]:
             mask=np.all(rgb==colour,axis=2)&valid
             loops=contours(mask,tolerance=.65)
             outers=[];holes=[]

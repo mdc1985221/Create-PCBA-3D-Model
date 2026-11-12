@@ -96,7 +96,7 @@ def main():
         dependency_dir = ocp_dir.parent
     binaries = dll_closure(dependency_dir)
     collect_licenses()
-    modules = ["project_refresh", "bga_support", "assembly_estimate", "datasheet_support", "pypdf", "manufacturing_export", "calibration", "generator", "gerber", "step_export", "cad_worker", "board_surfaces", "input_support", "user_models", "ai_support", "openpyxl", "xlrd", "xlrd.book", "xlrd.sheet", "xlrd.compdoc", "xlrd.biffh", "xlrd.formatting", "et_xmlfile", "numpy", "PIL", "scipy.optimize", "scipy.spatial"]
+    modules = ["board_appearance", "project_refresh", "bga_support", "assembly_estimate", "datasheet_support", "pypdf", "manufacturing_export", "calibration", "generator", "gerber", "step_export", "cad_worker", "board_surfaces", "input_support", "user_models", "ai_support", "openpyxl", "xlrd", "xlrd.book", "xlrd.sheet", "xlrd.compdoc", "xlrd.biffh", "xlrd.formatting", "et_xmlfile", "numpy", "PIL", "scipy.optimize", "scipy.spatial"]
     modules += ["OCP"] + ["OCP." + ".".join(p.parent.relative_to(ocp_dir).parts) for p in ocp_dir.rglob("__init__.py") if p.parent != ocp_dir]
     binary_entries = [(str(p), str(p.parent.relative_to(dependency_dir)).replace("\\", "/")) for p in binaries]
     datas = [(str(ROOT / "ui"), "ui"), (str(ROOT / "assets"), "assets"), (str(ROOT / "thirdparty_licenses"), "thirdparty_licenses"), (str(ROOT / "THIRD_PARTY_NOTICES.md"), ".")]

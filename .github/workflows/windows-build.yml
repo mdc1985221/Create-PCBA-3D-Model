@@ -32,6 +32,7 @@ jobs:
         run: |
           python scripts/test_bom_import.py
           node scripts/test_bom_selection.cjs
+          python scripts/test_board_appearance.py
           python scripts/test_bga.py
           python scripts/test_project_refresh.py
           python scripts/test_calibration_binding.py

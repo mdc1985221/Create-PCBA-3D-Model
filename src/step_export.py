@@ -118,7 +118,10 @@ def export_step(project, destination, progress=print):
                 ex.Next()
         return l
     board_label=shape_tool.NewShape();shape_tool.SetShape(board_label,empty);name(board_label,'PCB_WITH_GERBER_ARTWORK')
-    core_label=add_def(board,'PCB_FR4_%.3fx%.3fx%.3f_mm'%(w,h,th),(16/255,77/255,46/255))
+    from board_appearance import appearance,theme
+    board_appearance=appearance(R);board_colour=tuple(v/255 for v in theme(board_appearance['color'])['base'])
+    core_label=add_def(board,'PCB_FR4_%.3fx%.3fx%.3f_mm'%(w,h,th),board_colour,
+                       lambda xyz:board_colour if abs(xyz[2])<.001 or abs(xyz[2]-th)<.001 else (134/255,123/255,80/255))
     shape_tool.AddComponent(board_label,core_label,TopLoc_Location())
     # STEP cannot carry the viewer's PNG texture. Export its actual visible
     # lands/openings/silkscreen as coloured planar BREP artwork instead. These
@@ -272,7 +275,7 @@ def export_step(project, destination, progress=print):
     assert components.Length()==len(records)+1,(components.Length(),len(records))
     ex=TopExp_Explorer(root_shape,TopAbs_SOLID);solid_count=0
     while ex.More():solid_count+=1;ex.Next()
-    report=dict(file=path.name,units='mm',board_mm=[w,h,th],corner_radius_mm=radius,components=len(records),board_plus_components=components.Length(),root_assemblies=seq.Length(),solid_count=solid_count,bounds_mm=list(bounds),valid=True,read_back=True,mesh_materials=mesh_audit,placements=records,board_artwork=artwork,visual_transparency=transparency,note='Native STEP retained where available. Gerber pad/opening/silkscreen artwork is exported as coloured planar BREP faces, sampled from the same board images as the preview. Film/glass transparency uses standard STEP visual materials; CAD display settings may override it. Lighting, reflections and mesh-only component lettering can differ. Approximate package details remain approximate.')
+    report=dict(file=path.name,board_appearance=board_appearance,units='mm',board_mm=[w,h,th],corner_radius_mm=radius,components=len(records),board_plus_components=components.Length(),root_assemblies=seq.Length(),solid_count=solid_count,bounds_mm=list(bounds),valid=True,read_back=True,mesh_materials=mesh_audit,placements=records,board_artwork=artwork,visual_transparency=transparency,note='Native STEP retained where available. Gerber pad/opening/silkscreen artwork is exported as coloured planar BREP faces, sampled from the same board images as the preview. Film/glass transparency uses standard STEP visual materials; CAD display settings may override it. Lighting, reflections and mesh-only component lettering can differ. Approximate package details remain approximate.')
     path.with_suffix('.validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
     progress('STEP verified: '+str(path));return report
 

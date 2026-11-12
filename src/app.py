@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.9"
+VERSION = "1.3.10"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -269,6 +269,21 @@ class Application:
                 for path in exports:path.replace(history/path.name)
             job.update(report=report,downloads=self.project_downloads(request['id'],root))
             return dict(saved=True,calibration=state,manufacturing=manufacturing,rule_saved=bool(request.get('save_rule')),binding_saved=aliases is not None,footprint=p['pkg'],model=model,step_needs_export=True)
+
+    def appearance_operation(self,request):
+        from board_appearance import save
+        with self.lock:
+            if self.busy:raise ValueError('正在生成或导出，请完成后再保存板色')
+            job_id=request.get('id');job=self.jobs.get(job_id)
+            if not job or not job.get('preview'):raise ValueError('工程不存在')
+            self.busy=True;root=Path(job['output'])
+        try:
+            result=save(root,request.get('color'))
+            with self.lock:
+                job.update(report=read_json(root/'导入检查.json',{}),downloads=self.project_downloads(job_id,root))
+            return result
+        finally:
+            with self.lock:self.busy=False
 
     def manufacturing_operation(self,request,export=False):
         from manufacturing_export import snapshot,dfm_checks,export_centres
@@ -584,6 +599,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(self.app.export_project(request),202)
             if path == '/api/project/refresh':
                 return self.respond(self.app.refresh_project(request))
+            if path == '/api/project/appearance':
+                return self.respond(self.app.appearance_operation(request))
             if path in {'/api/project/coordinates','/api/project/dfm'}:
                 return self.respond(self.app.manufacturing_operation(request,export=path.endswith('/coordinates')))
             if path == '/api/project/assembly':

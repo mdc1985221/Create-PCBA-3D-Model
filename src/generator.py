@@ -553,6 +553,19 @@ def build(assets,out,files,config,progress):
         visible=ImageChops.subtract(silk,mask);im.paste((225,229,216),mask=visible)
         metal=Image.new('L',gerber.SIZE);metal.paste(225,mask=exposed);rough=Image.new('L',gerber.SIZE,175);rough.paste(118,mask=exposed)
         im.save(out/f'board_{face}.png');metal.save(out/f'board_{face}_metal.png');rough.save(out/f'board_{face}_rough.png');mask.save(out/f'gerber_{face}_mask.png')
+    from board_appearance import theme,recolour
+    selected_color=config.get('board_color','green');selected_theme=theme(selected_color)
+    if selected_color!='green':
+        import numpy as np
+        for side in ('top','bot'):
+            path=out/f'board_{side}.png'
+            with Image.open(path) as image:rgb=np.array(image.convert('RGB'))
+            Image.fromarray(recolour(rgb,theme('green'),selected_theme)).save(path)
+            path=out/f'board_{side}_rough.png'
+            with Image.open(path) as image:roughness=np.array(image.convert('L'))
+            is_mask=np.all(rgb==theme('green')['base'],axis=2)|np.all(rgb==theme('green')['copper'],axis=2)
+            roughness[is_mask]=selected_theme['rough'];Image.fromarray(roughness).save(path)
+    (out/'board_appearance.json').write_text(json.dumps(dict(version=1,color=selected_color)),encoding='utf8')
     outside=[r for r,p in placements.items() if not (-3<=p['x']<=w+3 and -3<=p['y']<=h+3)]
     if outside:raise ValueError('坐标超出板框，请检查单位/XY 原点：'+','.join(outside[:20]))
     # Keep every valid XY for board detection; only matched parts enter the assembly.

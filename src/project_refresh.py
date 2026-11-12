@@ -146,7 +146,9 @@ def upgrade_viewer(text, assets):
     text=text.replace('save_rule:rule,mount_type:', 'save_rule:rule,save_binding:rule,mount_type:')
     text=text.replace('已保存本器件及封装规则，下次生成会复用。当前 STP 和坐标需要重新导出。',
                       '已保存本器件，并绑定封装、模型和局部校准。下次按各自生产坐标、旋转角和面别复用；当前其他器件不变。STP 和坐标需要重新导出。')
-    for start,end in [('<!-- MODEL_REFRESH_UI -->','<!-- /MODEL_REFRESH_UI -->'),
+    for start,end in [('<!-- BOARD_COLOUR_UI -->','<!-- /BOARD_COLOUR_UI -->'),
+                      ('/* BOARD_COLOUR_SCRIPT */','/* /BOARD_COLOUR_SCRIPT */'),
+                      ('<!-- MODEL_REFRESH_UI -->','<!-- /MODEL_REFRESH_UI -->'),
                       ('/* MODEL_REFRESH_SCRIPT */','/* /MODEL_REFRESH_SCRIPT */')]:
         fragment=template.split(start,1)[1].split(end,1)[0]
         block=start+fragment+end
