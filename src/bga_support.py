@@ -106,7 +106,9 @@ def infer(root,ref):
     result=dict(ref=ref,pkg=p['pkg'],side=side,marking=marking,description=description,count=len(points),points=local,board_points=points,center=[cx,cy],xy=[p['x'],p['y']],rotation=p['rot'],pitch=[px,py],pad_diameter=pad_diameter,
                 width=width,depth=depth,height=1.,ball_diameter=round(min(px,py)*.55,3),source=source,
                 expected_count=int(re.match(r'^(?:F?BGA)(\d+)',p['pkg'],re.I)[1]) if re.match(r'^(?:F?BGA)(\d+)',p['pkg'],re.I) else None,
-                board=data['board'],note='球位来自实际图层；球径、本体长宽高为估算。A1 请对照板面标记确认，不自动认定。')
+                board=data['board'],note='球位来自实际图层；球径、本体长宽高为估算。A1 优先读取制板丝印几何；无明确线索时请人工确认。')
+    from pin1_support import detect
+    result['pin1']=detect(root,result,data)
     result['reference']=board_reference(root,result)
     return result
 
@@ -125,50 +127,85 @@ def stage_bga(home,root,ref,options):
     if values['ball_diameter']>=min(result['pitch'])*.95:raise ValueError('球径需要小于球间距')
     extent=[max(abs(q[i]) for q in result['points']) for i in [0,1]]
     if any(values[key]/2<extent[i]+values['ball_diameter']/2 for i,key in enumerate(['width','depth'])):raise ValueError('本体尺寸小于球阵列，请核对长宽')
-    corner=options.get('a1','unknown')
+    detected=result['pin1']
+    corner=options.get('a1',detected['corner'])
     if corner not in ['unknown','tl','tr','bl','br']:raise ValueError('A1 角无效')
-    marker=options.get('pin1_style','dot')
+    marker=options.get('pin1_style',detected['style'])
     if marker not in ['dot','triangle']:raise ValueError('第一脚标识样式无效')
-    if corner!='unknown' and options.get('a1_confirmed') is not True:raise ValueError('请先对照板面丝印或规格书，确认第一脚 / A1 方向')
+    manual=options.get('a1_confirmed') is True
+    automatic=corner!='unknown' and corner==detected['corner'] and detected['status']=='detected' and not manual
+    if corner!='unknown' and not manual and not automatic:raise ValueError('请先对照板面丝印或规格书，确认第一脚 / A1 方向')
     w,d,h,diam=[values[k] for k in ['width','depth','height','ball_diameter']];r=diam/2;stand=diam*.7
-    groups=[(BRepPrimAPI_MakeBox(gp_Pnt(-w/2,-d/2,stand),w,d,h).Shape(),PALETTE['body'])]
+    # Colours are linear RGB in both the viewer and CAD exporter.
+    body=BRepPrimAPI_MakeBox(gp_Pnt(-w/2,-d/2,stand),w,d,h).Shape()
+    groups=[(body,[.006,.007,.009])]
     for x,y in result['points']:groups.append((BRepPrimAPI_MakeSphere(gp_Pnt(x,y,r),r).Shape(),PALETTE['metal']))
+    from OCP.TopoDS import TopoDS_Compound
+    from OCP.BRep import BRep_Builder
+    cutters=TopoDS_Compound();builder=BRep_Builder();builder.MakeCompound(cutters)
+    recess=min(.035,h*.15);floor=stand+h-recess;inlay_depth=recess*.2
+    has_cut=False
+    def engraved(shape,inlay):
+        nonlocal has_cut
+        builder.Add(cutters,shape);has_cut=True
+        return inlay
     marking=str(options.get('marking',result['marking'])).strip()
     if len(marking)>48 or re.search(r'[^A-Za-z0-9 ._+/()-]',marking):raise ValueError('模型标记支持最多 48 个英文字母、数字及常用符号')
     if marking:
-        # Small raised ink rectangles survive STEP export as well as Web preview.
+        # Cut actual pockets; contrasting floors sit below the original surface.
         from PIL import Image,ImageDraw,ImageFont
-        from OCP.TopoDS import TopoDS_Compound
-        from OCP.BRep import BRep_Builder
         try:font=ImageFont.truetype('C:/Windows/Fonts/arial.ttf',18)
         except OSError:font=ImageFont.load_default(size=18)
         box=font.getbbox(marking);image=Image.new('1',(box[2]-box[0],box[3]-box[1]))
         ImageDraw.Draw(image).text((-box[0],-box[1]),marking,font=font,fill=1)
+        image=image.crop(image.getbbox()) if image.getbbox() else None
+    if marking and image is not None:
         scale=min(w*.78/image.width,d*.18/image.height)
-        compound=TopoDS_Compound();builder=BRep_Builder();builder.MakeCompound(compound)
+        compound=TopoDS_Compound();builder.MakeCompound(compound)
+        # Merge consecutive equal runs so the boolean operation stays compact.
+        active={};rectangles=[]
         for iy in range(image.height):
-            ix=0
+            ix=0;runs=set()
             while ix<image.width:
                 if not image.getpixel((ix,iy)):ix+=1;continue
                 start=ix
                 while ix<image.width and image.getpixel((ix,iy)):ix+=1
-                shape=BRepPrimAPI_MakeBox(gp_Pnt((start-image.width/2)*scale,(image.height/2-iy-1)*scale,stand+h), (ix-start)*scale,scale,.008).Shape()
-                builder.Add(compound,shape)
-        groups.append((compound,[.65,.67,.64]))
+                runs.add((start,ix))
+            for run in list(active):
+                if run not in runs:rectangles.append((*run,active.pop(run),iy))
+            for run in runs:active.setdefault(run,iy)
+        rectangles.extend((*run,start,image.height) for run,start in active.items())
+        for start,end,top,bottom in rectangles:
+            point=gp_Pnt((start-image.width/2)*scale,(image.height/2-bottom)*scale,floor)
+            cut=BRepPrimAPI_MakeBox(point,(end-start)*scale,(bottom-top)*scale,recess+.002).Shape()
+            ink=BRepPrimAPI_MakeBox(point,(end-start)*scale,(bottom-top)*scale,inlay_depth).Shape()
+            builder.Add(compound,engraved(cut,ink))
+        groups.append((compound,[.24,.25,.23]))
     if corner!='unknown':
         radius=min(.24,min(w,d)*.045);margin=radius*2
         x=(-1 if corner.endswith('l') else 1)*(w/2-margin);y=(1 if corner.startswith('t') else -1)*(d/2-margin)
-        z=stand+h+.002
+        z=floor
         if marker=='dot':
-            shape=BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x,y,z),gp_Dir(0,0,1)),radius,.015).Shape()
+            axis=gp_Ax2(gp_Pnt(x,y,z),gp_Dir(0,0,1))
+            cut=BRepPrimAPI_MakeCylinder(axis,radius,recess+.002).Shape()
+            shape=BRepPrimAPI_MakeCylinder(axis,radius,inlay_depth).Shape()
         else:
             from OCP.BRepBuilderAPI import BRepBuilderAPI_MakePolygon,BRepBuilderAPI_MakeFace
             polygon=BRepBuilderAPI_MakePolygon();sx=-1 if corner.endswith('l') else 1;sy=1 if corner.startswith('t') else -1
             for u,v in [(sx*radius,sy*radius),(-sx*radius,sy*radius),(sx*radius,-sy*radius)]:polygon.Add(gp_Pnt(x+u,y+v,z))
-            polygon.Close();shape=BRepPrimAPI_MakePrism(BRepBuilderAPI_MakeFace(polygon.Wire()).Face(),gp_Vec(0,0,.015)).Shape()
-        groups.append((shape,[.76,.78,.72]))
+            polygon.Close();face=BRepBuilderAPI_MakeFace(polygon.Wire()).Face()
+            cut=BRepPrimAPI_MakePrism(face,gp_Vec(0,0,recess+.002)).Shape()
+            shape=BRepPrimAPI_MakePrism(face,gp_Vec(0,0,inlay_depth)).Shape()
+        groups.append((engraved(cut,shape),[.48,.50,.45]))
+    if has_cut:
+        from OCP.BRepAlgoAPI import BRepAlgoAPI_Cut
+        from OCP.BRepCheck import BRepCheck_Analyzer
+        operation=BRepAlgoAPI_Cut(body,cutters)
+        if not operation.IsDone() or operation.Shape().IsNull() or not BRepCheck_Analyzer(operation.Shape()).IsValid():
+            raise ValueError('芯片表面凹刻失败，请缩短标记或调整本体尺寸后重试')
+        groups[0]=(operation.Shape(),groups[0][1])
     name='BGA_'+re.sub('[^A-Za-z0-9_]','_',ref)+'_'+secrets.token_hex(3)
-    draft=stage(home,name,groups,dict(origin='custom',origin_xyz=[0,0,0]),dict(kind='gerber_bga',ref=ref,pkg=result['pkg'],estimated=True,a1=corner,a1_confirmed=corner!='unknown',a1_basis='manual_board_or_datasheet' if corner!='unknown' else 'unconfirmed',pin1_style=marker if corner!='unknown' else None,marking=marking,description=result['description'],parameters=values,pitch=result['pitch'],count=result['count']),[result['note']])
+    draft=stage(home,name,groups,dict(origin='custom',origin_xyz=[0,0,0]),dict(kind='gerber_bga',ref=ref,pkg=result['pkg'],estimated=True,a1=corner,a1_confirmed=corner!='unknown' and manual,a1_basis=detected['basis'] if automatic else 'manual_board_or_datasheet' if corner!='unknown' else 'unconfirmed',a1_detection=detected,pin1_style=marker if corner!='unknown' else None,marking=marking,marking_style='recessed',recess_depth_mm=recess,body_color='black',description=result['description'],parameters=values,pitch=result['pitch'],count=result['count']),[result['note'],detected['note']])
     draft.update(inference=result,parameters=values,a1=corner)
     # Store the exact target server-side; commit cannot change it by editing the page.
     from user_models import write_json

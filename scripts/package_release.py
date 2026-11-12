@@ -6,7 +6,7 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--dist',default='dist');args=parser.parse_args()
     source=(ROOT/args.dist).resolve();assert (source/'PCBA3D.exe').is_file()
     release=ROOT/'release';release.mkdir(exist_ok=True)
-    name='PCBA3D-1.3.10-public-Windows-x64';package=release/name;package.mkdir(exist_ok=True)
+    name='PCBA3D-1.3.11-public-Windows-x64';package=release/name;package.mkdir(exist_ok=True)
     shutil.copy2(source/'PCBA3D.exe',package/'PCBA3D.exe')
     for path in ['用户模型库','thirdparty_licenses','docs','examples']:
         shutil.copytree(ROOT/path,package/path,dirs_exist_ok=True)
