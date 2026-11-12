@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.6"
+VERSION = "1.3.9"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -162,6 +162,33 @@ class Application:
         finally:
             with self.lock: self.busy = False
 
+    def bga_operation(self,route,request):
+        from bga_support import candidates,infer,stage_bga
+        job=self.jobs.get(request.get('id'))
+        if not job or not job.get('preview'):raise ValueError('请先生成一个 PCBA 工程')
+        root=Path(job['output'])
+        if route=='/api/bga/list':return dict(items=candidates(root))
+        if route=='/api/bga/infer':return infer(root,request.get('ref'))
+        with self.lock:
+            if self.busy:raise ValueError('正在处理，请稍后再试')
+            self.busy=True
+        try:
+            if route=='/api/bga/preview':return stage_bga(self.home,root,request.get('ref'),request.get('options',{}))
+            if route=='/api/bga/save':
+                from user_models import read_catalog,commit,binding_aliases
+                draft=request.get('draft')
+                if not re.fullmatch(r'[a-f0-9]{24}',str(draft)):raise ValueError('草稿编号无效')
+                target=read_json(self.home/'模型草稿'/draft/'bga.json')
+                if not target or target not in [dict(ref=q['ref'],pkg=q['pkg']) for q in candidates(root)]:raise ValueError('草稿与当前工程不符')
+                models=read_catalog(self.home/'模型草稿'/draft)
+                if len(models)!=1:raise ValueError('草稿不存在')
+                aliases=binding_aliases(self.user_aliases(),target['pkg'],next(iter(models)),models)
+                saved=commit(self.home,draft,target['pkg']);self.save_aliases(aliases)
+                return saved
+            raise ValueError('BGA 操作不存在')
+        finally:
+            with self.lock:self.busy=False
+
     def save_aliases(self, aliases):
         if not isinstance(aliases, dict) or len(aliases) > 3000:
             raise ValueError("封装映射应为 JSON 对象，最多 3000 项")
@@ -175,6 +202,23 @@ class Application:
         temporary.replace(self.alias_path)
         return dict(saved=True, path=str(self.alias_path), count=len(aliases))
 
+    def refresh_project(self, request):
+        from project_refresh import refresh
+        with self.lock:
+            if self.busy:raise ValueError('正在生成、保存或导出，请完成后再刷新')
+            job_id=request.get('id');job=self.jobs.get(job_id)
+            if not job or not job.get('preview'):raise ValueError('请从当前工具打开工程后再刷新')
+            self.busy=True
+        try:
+            result=refresh(self.assets,Path(job['output']),self.library(),self.user_aliases(),
+                           self.home/'用户模型库',read_json(self.home/'calibration_rules.json',{}))
+            report=result.pop('report')
+            with self.lock:
+                job.update(report=report,downloads=self.project_downloads(job_id,Path(job['output'])))
+            return dict(result,preview=job['preview'],components=report.get('components',0),step_needs_export=result['changed'])
+        finally:
+            with self.lock:self.busy=False
+
     def calibration_operation(self, request):
         from calibration import read,dump,values,make_rule,rule_key
         with self.lock:
@@ -183,13 +227,9 @@ class Application:
             if not job or not job.get('preview'):raise ValueError('工程不存在，请从当前工具生成的预览中操作')
             root=Path(job['output']);data=read(root/'data.json');ref=request.get('ref')
             if ref not in data['placements']:raise ValueError('请选择一个已显示器件')
-            p=data['placements'][ref];mapping=read(root/'model_mapping.json',{})
-            if not mapping:
-                html=(root/'index.html').read_text(encoding='utf8')
-                mapping=dict(re.findall(r"'([^']+)':\s*'([^']+)'",html.split('const MODEL_MAP = {')[1].split('};')[0]))
-            model=mapping.get(p['pkg'])
-            html=(root/'index.html').read_text(encoding='utf8')
-            overrides=dict(re.findall(r"(\w+):\s*'([^']+)'",html.split('const MODEL_BY_REF = {')[1].split('};')[0]))
+            from manufacturing_export import mapping_for
+            p=data['placements'][ref];mapping,overrides=mapping_for(root)
+            model=mapping.get(ref,mapping.get(p['pkg']))
             model=overrides.get(ref,model)
             if not model:raise ValueError('没有找到该器件的模型映射')
             rules=read(self.home/'calibration_rules.json',{});key=rule_key(p['pkg'],model)
@@ -199,6 +239,11 @@ class Application:
             from manufacturing_export import MOUNT_TYPES
             if 'mount_type' in request and request['mount_type'] not in MOUNT_TYPES:raise ValueError('无效安装类型')
             v=values(request.get('values'));poses=read(root/'posefix.json',{})
+            aliases=None
+            if request.get('save_binding'):
+                if not request.get('save_rule'):raise ValueError('模型校准绑定必须同时保存校准规则')
+                from user_models import binding_aliases
+                aliases=binding_aliases(self.user_aliases(),p['pkg'],model,self.library())
             if request.get('save_rule'):
                 rules[key]=make_rule(p,poses.get(ref,{}),model,v)
             state=read(root/'calibration.json',dict(version=1,items={}))
@@ -215,6 +260,7 @@ class Application:
             report.pop('coordinate_export',None);dump(root/'manufacturing.json',manufacturing)
             dump(root/'calibration.json',state);dump(root/'生成配置.json',config);dump(root/'导入检查.json',report)
             if request.get('save_rule'):dump(self.home/'calibration_rules.json',rules)
+            if aliases is not None:self.save_aliases(aliases)
             with (root/'校准记录.jsonl').open('a',encoding='utf8') as stream:
                 stream.write(json.dumps(dict(time=time.strftime('%Y-%m-%d %H:%M:%S'),ref=ref,previous=previous,values=v,saved_rule=bool(request.get('save_rule'))),ensure_ascii=False)+'\n')
             exports=list(root.glob('*.stp'))+list(root.glob('*.step'))+list(root.glob('*.validation.json'))
@@ -222,7 +268,7 @@ class Application:
                 history=root/'历史导出'/str(time.time_ns());history.mkdir(parents=True)
                 for path in exports:path.replace(history/path.name)
             job.update(report=report,downloads=self.project_downloads(request['id'],root))
-            return dict(saved=True,calibration=state,manufacturing=manufacturing,rule_saved=bool(request.get('save_rule')),step_needs_export=True)
+            return dict(saved=True,calibration=state,manufacturing=manufacturing,rule_saved=bool(request.get('save_rule')),binding_saved=aliases is not None,footprint=p['pkg'],model=model,step_needs_export=True)
 
     def manufacturing_operation(self,request,export=False):
         from manufacturing_export import snapshot,dfm_checks,export_centres
@@ -522,6 +568,8 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(request, dict):
                 raise ValueError("请求格式错误")
             path = urlsplit(self.path).path
+            if path in {'/api/bga/list','/api/bga/infer','/api/bga/preview','/api/bga/save'}:
+                return self.respond(self.app.bga_operation(path,request))
             if path in {'/api/ai/settings','/api/ai/generate','/api/ai/search','/api/ai/test','/api/ai/datasheet','/api/models/import','/api/models/parametric','/api/models/commit','/api/models/bind'}:
                 return self.respond(self.app.model_operation(path,request))
             if path == "/api/inspect":
@@ -534,6 +582,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(self.app.calibration_operation(request))
             if path == '/api/project/export':
                 return self.respond(self.app.export_project(request),202)
+            if path == '/api/project/refresh':
+                return self.respond(self.app.refresh_project(request))
             if path in {'/api/project/coordinates','/api/project/dfm'}:
                 return self.respond(self.app.manufacturing_operation(request,export=path.endswith('/coordinates')))
             if path == '/api/project/assembly':

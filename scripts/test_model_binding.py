@@ -42,11 +42,13 @@ class ModelBindingTests(unittest.TestCase):
                 for name in ['S'+kind+size,kind+size,size+kind]:self.assertEqual(builtins[norm(name)],kind+'_'+size)
         changed=aliases(ROOT/'assets',{'SR0201':'manual'})
         self.assertEqual(changed[norm('SR0201')],'manual')
-        self.assertNotIn(norm('SC0402-BGA'),builtins)
+        self.assertEqual(builtins[norm('SC0402-BGA')],'C_0402')
+        self.assertNotIn(norm('SC0402-OTHER'),builtins)
+        self.assertEqual(aliases(ROOT/'assets',{'SC0402-BGA':'manual'})[norm('SC0402-BGA')],'manual')
         info=self.app.info()
-        files={'xy.csv':b'Ref,X,Y,Rotation,Side,Package\nR1,1,2,0,Top,SR0201\nC1,3,4,0,Top,SC0402\n'}
+        files={'xy.csv':b'Ref,X,Y,Rotation,Side,Package\nR1,1,2,0,Top,SR0201\nC1,3,4,0,Top,SC0402\nC2,5,6,90,Bottom,SC0402-BGA\n'}
         review=review_files(files,{'xy':'xy.csv'},info['aliases'],{m['id'] for m in info['models']})
-        self.assertEqual({g['pkg']:g['model'] for g in review['footprints']},{'SR0201':'R_0201','SC0402':'C_0402'})
+        self.assertEqual({g['pkg']:g['model'] for g in review['footprints']},{'SR0201':'R_0201','SC0402':'C_0402','SC0402-BGA':'C_0402'})
 
     def test_import_save_only_then_bind_and_restart(self):
         from user_models import stage_parametric

@@ -136,7 +136,7 @@
       <datalist id="refSuggestions"></datalist><div id="refStatus" role="status">输入完整位号，自动翻面、高亮并放大；“全板”恢复。</div>
       <div class="row" style="margin-top:7px"><button id="vDFM" type="button">坐标 / DFM</button><button id="vAssembly" type="button">贴装数量</button></div>
     </div>
-    <details id="pendingSection" class="sec" hidden><summary id="pendingTitle">待处理器件</summary><div id="pendingList" style="font-size:11px;line-height:1.8;max-height:220px;overflow:auto"></div></details>
+    <div class="sec"><button onclick="window.open('/bga.html?id='+encodeURIComponent(location.pathname.split('/')[2]),'_blank','noopener')">从焊盘生成 BGA</button></div><!-- MODEL_REFRESH_UI --><div class="sec"><button id="modelRefresh">应用绑定并刷新 3D</button><div id="modelRefreshStatus" role="status" style="font-size:11px;color:#ffcf74;margin-top:6px;white-space:pre-wrap"></div></div><!-- /MODEL_REFRESH_UI --><details id="pendingSection" class="sec" hidden><summary id="pendingTitle">待处理器件</summary><div id="pendingList" style="font-size:11px;line-height:1.8;max-height:220px;overflow:auto"></div></details>
     <div class="sec" style="padding-bottom:7px">
       <div class="t">BOM · <span id="bmCount"></span></div>
       <div style="font-size:11px;color:#a8b5c8;margin:7px 0">选 BOM 找板上位置；点板上器件找 BOM。顶 / 底面只高亮本面，方便手工贴片。</div>
@@ -188,8 +188,8 @@
       <label>捕捉起点<select id="calSnapMode" aria-label="捕捉起点"><option value="point">点选引脚位置（原方式）</option><option value="pin-center">引脚几何中心</option><option value="origin">模型原点</option></select></label>
       <div class="hint">目标吸附到本面焊盘／阻焊开窗中心。引脚中心按连通金属几何计算；复杂连通模型可用原方式。</div>
       <div class="row"><button id="calAlign" disabled>点选引脚 → 焊盘</button><button id="calZero" disabled>清零校准</button><button id="calUndo" disabled>撤销未保存</button></div>
-      <div class="row"><button id="calSave" disabled>保存本器件</button><button id="calRule" disabled>保存为封装规则</button></div>
-      <div class="hint">封装规则从下次生成起复用，并随角度及顶底面转换。当前其他器件不受此按钮影响。</div>
+      <div class="row"><button id="calSave" disabled>仅保存本器件</button><button id="calRule" disabled>保存模型校准绑定</button></div>
+      <div class="hint">放置 = 生产 X/Y、原始角度 + 自动方向修正 + 手动校准。“保存模型校准绑定”记住此封装、模型及局部偏移 / 角度修正，下次生成随各自角度与顶底面复用，绝不复制当前器件的绝对坐标。仅一颗生产坐标有误时，请用“仅保存本器件”。</div>
       <div class="row" style="margin-top:7px"><button id="calRemoveRule" disabled>删除此封装规则</button><button id="calExport">重新导出 STP</button></div>
       <a id="calDownload" hidden style="color:#8dc1ff" download>下载已验证 STP</a>
       <div id="calStatus" role="status">选择单个器件后校准；修改实时预览，保存后用于 STP。</div>
@@ -1139,7 +1139,7 @@ async function calApi(path,body){
 async function calSave(rule=false){
   if(!calActive||calBusy)return;let v;try{v=calRead();}catch(error){calMessage(error.message);return;}
   calBusy=true;calLocks();const ref=calActive;
-  try{const result=await calApi('/api/calibration',{ref,values:v,save_rule:rule,mount_type:calEl('calMount').value});calSaved[ref]=structuredClone(result.calibration.items[ref]);CALIBRATION.items[ref]=structuredClone(calSaved[ref]);mountSaved[ref]=result.manufacturing.mount_types[ref]||'auto';calDirty.delete(ref);calEl('calDownload').hidden=true;mfgInvalidate(true);calMessage(rule?'已保存本器件及封装规则，下次生成会复用。当前 STP 和坐标需要重新导出。':'本器件校准及安装类型已保存。当前 STP 和坐标需要重新导出。');}
+  try{const result=await calApi('/api/calibration',{ref,values:v,save_rule:rule,save_binding:rule,mount_type:calEl('calMount').value});calSaved[ref]=structuredClone(result.calibration.items[ref]);CALIBRATION.items[ref]=structuredClone(calSaved[ref]);mountSaved[ref]=result.manufacturing.mount_types[ref]||'auto';calDirty.delete(ref);calEl('calDownload').hidden=true;mfgInvalidate(true);calMessage(rule?'已保存本器件，并绑定封装、模型和局部校准。下次按各自生产坐标、旋转角和面别复用；当前其他器件不变。STP 和坐标需要重新导出。':'本器件校准及安装类型已保存。当前 STP 和坐标需要重新导出。');}
   catch(error){calMessage('保存失败：'+error.message);}finally{calBusy=false;calLocks();calUpdateMatrices();}
 }
 calEl('calSave').onclick=()=>calSave(false);calEl('calRule').onclick=()=>calSave(true);
@@ -1510,6 +1510,23 @@ window.viewAll = viewAll; window.viewTop = viewTop; window.viewBottom = viewBott
 window.DATA = DATA; window.setSelected = setSelected; window.frameOn = frameOn;
 window.setComponentSide=setComponentSide;
 window.__ready = true;
+/* MODEL_REFRESH_SCRIPT */
+const modelRefreshButton=document.getElementById('modelRefresh'),modelRefreshStatus=document.getElementById('modelRefreshStatus');
+const modelRefreshKey='pcba-refresh-'+calJobId;
+try{const result=JSON.parse(sessionStorage.getItem(modelRefreshKey)||'null');if(result){modelRefreshStatus.textContent=result.text;if(result.view){setComponentSide(result.view.side);camera.position.fromArray(result.view.position);camera.up.fromArray(result.view.up);controls.target.fromArray(result.view.target);controls.update();}sessionStorage.removeItem(modelRefreshKey);}}catch{}
+const modelRefreshChannel=calJobId?new BroadcastChannel('pcba-project-'+calJobId):null;
+if(modelRefreshChannel)modelRefreshChannel.onmessage=event=>{if(event.data?.type==='check-dirty')modelRefreshChannel.postMessage({type:'dirty-result',nonce:event.data.nonce,dirty:calDirty.size});};
+modelRefreshButton.onclick=async()=>{
+  if(calDirty.size){modelRefreshStatus.textContent='还有未保存的校准，请先保存或撤销，再刷新。';return;}
+  if(calBusy)return;calBusy=true;calLocks();modelRefreshButton.disabled=true;modelRefreshStatus.textContent='正在应用最新绑定，保留已保存的校准…';
+  try{const result=await calApi('/api/project/refresh',{});const text=result.changed?`已刷新：新增 ${result.added.length} 个器件，更新 ${result.replaced.length} 个；还需处理 ${result.pending} 个。`:`当前已是最新绑定；还需处理 ${result.pending} 个。`;
+    if(!result.changed&&!result.viewer_updated){modelRefreshStatus.textContent=text;return;}
+    const view={position:camera.position.toArray(),up:camera.up.toArray(),target:controls.target.toArray(),side:componentSide};sessionStorage.setItem(modelRefreshKey,JSON.stringify({text,view}));location.replace(result.preview+'?updated='+Date.now());
+  }catch(error){modelRefreshStatus.textContent='刷新失败：'+error.message;}finally{calBusy=false;calLocks();modelRefreshButton.disabled=false;}
+};
+const refreshedFocus=new URLSearchParams(location.search).get('focus');
+if(refreshedFocus&&refLookup.has(refreshedFocus.toUpperCase())){document.getElementById('refSearch').value=refreshedFocus;document.getElementById('refSearchForm').requestSubmit();}
+/* /MODEL_REFRESH_SCRIPT */
 </script>
 </body>
 </html>
