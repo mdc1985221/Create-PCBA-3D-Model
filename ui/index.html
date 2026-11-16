@@ -151,6 +151,18 @@ function showReadyPreview(job){
   }
   $('summary').append(counts);if(report.incomplete){const pending=document.createElement('div');pending.className='notice';pending.textContent='部分预览：'+(report.pending_components||[]).length+' 个器件待处理。当前仅显示已匹配器件，完整 STP 在补齐后生成。';$('summary').append(pending);const list=document.createElement('ul');for(const item of report.pending_components||[]){const li=document.createElement('li');li.textContent=item.ref+' · '+(item.pkg||'无坐标')+' · '+item.message;list.append(li)}const details=document.createElement('details');const heading=document.createElement('summary');heading.textContent='查看待处理器件';details.append(heading,list);$('summary').append(details);}
   if(report.board_detection){const board=document.createElement('div');board.className='notice';board.textContent='自动识别单板：'+report.board_mm.map(v=>Number(v.toFixed(3))).join(' × ')+' mm；源原点 ('+report.origin_mm.map(v=>v.toFixed(4)).join(', ')+')，XY 已对齐，保留 Gerber 圆角。';$('summary').append(board)}
+  if(report.package_check){
+    const validation=report.package_check,s=validation.summary;
+    const details=document.createElement('details'),heading=document.createElement('summary');
+    heading.textContent=`BOM / 3D 封装核对：${s.error} 个冲突 · ${s.review} 个待核对 · ${s.matched} 个特征一致`;
+    details.open=s.error>0;details.append(heading);
+    const note=document.createElement('p');note.textContent=validation.note;details.append(note);
+    const list=document.createElement('ul');
+    for(const item of validation.items.filter(x=>x.status!=='matched')){
+      const li=document.createElement('li');li.textContent=`${item.status==='error'?'【冲突】':'【待核对】'} ${item.ref} · ${item.bom_location||'BOM 行号未记录'} · BOM：${item.bom_package||item.bom_description||'未提供封装'} · 坐标：${item.xy_package||'未提供'} · 3D：${item.model||'未匹配'} · ${item.reasons.join('；')}`;list.append(li);
+    }
+    details.append(list);const download=document.createElement('a');download.href=job.preview.replace(/index\.html(?:\?.*)?$/,'')+'BOM封装核对.csv';download.download='BOM封装核对.csv';download.textContent='下载完整封装核对表（CSV）';details.append(download);$('summary').append(details);
+  }
   $('summary').classList.remove('hidden');$('warnings').replaceChildren();
   for(const warning of report.warnings||[]){const li=document.createElement('li');li.textContent=warning;$('warnings').append(li)}
   $('warnings').classList.toggle('hidden',!$('warnings').children.length);

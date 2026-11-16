@@ -97,6 +97,11 @@ def refresh(assets, root, library, user_aliases, user_root, rules=None):
     updated_models={k:v for k,v in {**models,**changed_models}.items() if k in used}
     if not used<=updated_models.keys():
         raise ValueError('工程模型快照不完整，未应用更新')
+    from package_check import check,files,report_warning
+    package_validation=check({**placements,**{p['ref']:p for p in pending if p.get('reason')=='unmatched_model'}},
+                             data.get('bom',[]),mapping,updated_models,overrides)
+    report['package_check']=package_validation
+    report['warnings']=[w for w in report['warnings'] if not w.startswith('封装核对：')]+[report_warning(package_validation)]
     values={'data.json':data,'导入检查.json':report,'生成配置.json':config,
             'models/models.json':updated_models,'model_mapping.json':mapping,
             '待处理器件.json':pending,'calibration.json':calibration,'manufacturing.json':manufacturing}
@@ -107,6 +112,7 @@ def refresh(assets, root, library, user_aliases, user_root, rules=None):
         copy_native_model_parts(assets,stage,changed_models,user_root)
         for name,value in values.items():
             path=stage/name;path.parent.mkdir(parents=True,exist_ok=True);dump(path,value)
+        for name,value in files(package_validation).items():(stage/name).write_text(value,encoding='utf8')
         (stage/'index.html').write_text(text,encoding='utf8')
         targets=[p.relative_to(stage) for p in stage.rglob('*') if p.is_file()]
         backup=root/result['backup'];backup.mkdir(parents=True)

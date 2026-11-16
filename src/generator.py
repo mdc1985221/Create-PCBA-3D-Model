@@ -356,10 +356,12 @@ def build(assets,out,files,config,progress):
             if quantity and num(quantity)!=len(rr):raise ValueError('BOM '+location+'数量与位号数不符：'+','.join(rr)+'；用量 '+quantity+'，不同位号 '+str(len(set(rr))))
             bom_populated.update(rr)
             material_name=getb('name') or v;material_code=getb('code')
-            bom.append(dict(refs=','.join(rr),qty=len(rr),val=v,desc=de,name=material_name,code=material_code))
+            bom.append(dict(refs=','.join(rr),qty=len(rr),val=v,desc=de,name=material_name,code=material_code,
+                            pkg=getb('pkg'),location=location,file=Path(config['bom']).name))
             for r in rr:
                 if r in placements:
                     p=placements[r];p['val']=v or p['val'];p['desc']=de;p['name']=material_name;p['code']=material_code
+                    p.update(xy_pkg=p['pkg'],bom_pkg=getb('pkg'),bom_location=location)
                     if not p['pkg']:p['pkg']=getb('pkg')
                 else:
                     missing.append(r);accessory_candidates[r]=(v,de,material_name,material_code)
@@ -408,6 +410,11 @@ def build(assets,out,files,config,progress):
         if not config.get('allow_partial',True):
             raise ValueError('待匹配封装：'+', '.join(sorted(set(unknown)))+'。请在封装映射中设置对应模型后生成。')
         warnings.append('部分预览：以下封装尚未匹配模型，器件保留在待处理清单：'+', '.join(sorted(set(unknown))))
+    progress('核对 BOM、坐标封装与 3D 模型')
+    from package_check import check,save,report_warning
+    package_validation=check(placements,bom,mapping,library)
+    save(out,package_validation)
+    warnings.append(report_warning(package_validation))
     w,h,th=[num(config.get(k,v)) for k,v in [('width',38),('height',38),('thickness',1.6)]]
     if min(w,h,th)<=0 or max(w,h)>500:raise ValueError('板尺寸需为正，最大支持 500 mm')
     radius=num(config.get('radius',0));ox=num(config.get('gerber_x0',0));oy=num(config.get('gerber_y0',0))
@@ -665,7 +672,7 @@ def build(assets,out,files,config,progress):
     html=re.sub(r"const ASSET_VERSION = [^;]+;",lambda m:'const ASSET_VERSION = '+json.dumps(str(__import__('time').time()))+';',html,count=1)
     (out/'index.html').write_text(html,encoding='utf8');shutil.copytree(assets/'vendor',out/'vendor',dirs_exist_ok=True)
     report=dict(components=len(placements)-len(inferred_accessories),accessories=len(inferred_accessories),inferred_accessories=inferred_accessories,top=data['counts']['top'],bottom=data['counts']['bottom'],nc=sorted(set(nc)),xy_not_in_bom=xy_not_in_bom,bom_missing_coordinates=sorted(set(missing)),pending_components=pending,unmatched_footprints=sorted(set(unknown)),incomplete=bool(pending),excluded_rows=excluded_records,layers=layers,models=mapping,auto_pose=pose,warnings=warnings,board_mm=[w,h,th],origin_mm=[ox,oy],outline_basis=outline_basis,holes=len(holes),routed_slots=len(slots),duplicate_slots_removed=duplicate_slots,drills=drill_reports,
-                board_detection=board_detection,resolved_config=dict(width=w,height=h,thickness=th,radius=radius,gerber_x0=ox,gerber_y0=oy,xy_dx=num(config.get('xy_dx',0)),xy_dy=num(config.get('xy_dy',0))))
+                package_check=package_validation,board_detection=board_detection,resolved_config=dict(width=w,height=h,thickness=th,radius=radius,gerber_x0=ox,gerber_y0=oy,xy_dx=num(config.get('xy_dx',0)),xy_dy=num(config.get('xy_dy',0))))
     (out/'导入检查.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
     (out/'待处理器件.json').write_text(json.dumps(pending,ensure_ascii=False,indent=2),encoding='utf8')
     if config.get('step',True) and not pending:

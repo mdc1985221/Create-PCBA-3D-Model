@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.11"
+VERSION = "1.3.12"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -326,7 +326,7 @@ class Application:
 
     def project_downloads(self,job_id,root):
         files=[dict(name=p.name,size=p.stat().st_size,url='/project/'+job_id+'/'+quote(p.name)) for p in sorted(Path(root).iterdir())
-                if p.is_file() and (p.suffix.lower() in {'.stp','.step'} or p.name in {'导入检查.json','生成配置.json','BOM核对说明.md','待处理器件.json','calibration.json','校准记录.jsonl'})]
+                if p.is_file() and (p.suffix.lower() in {'.stp','.step'} or p.name in {'导入检查.json','生成配置.json','BOM核对说明.md','BOM封装核对.json','BOM封装核对.csv','待处理器件.json','calibration.json','校准记录.jsonl'})]
         latest=read_json(Path(root)/'manufacturing.json',{}).get('last_export',{})
         return files+latest.get('files',[])
 
