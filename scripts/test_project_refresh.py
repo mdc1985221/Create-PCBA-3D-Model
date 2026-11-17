@@ -80,5 +80,18 @@ const MODEL_BY_REF = {}; const ASSET_VERSION = "old";</script>''',encoding='utf8
         self.assertEqual(read(self.project/'calibration.json'),self.cal)
         self.assertFalse(self.apply({}).get('viewer_updated',False))
 
+    def test_old_viewer_export_upgrade_keeps_project_bindings(self):
+        from viewer_support import upgrade_image_export
+        old="const MODEL_BY_REF = {U1:'MY_MODEL'};\nfunction saveView(kind) { renderer.render(scene,camera); }\n$('saveTop').onclick=()=>saveView('top');\nconst calibration={U1:{x:2.5}};"
+        upgraded=upgrade_image_export(old,self.assets)
+        self.assertIn("const MODEL_BY_REF = {U1:'MY_MODEL'};",upgraded)
+        self.assertIn('const calibration={U1:{x:2.5}};',upgraded)
+        self.assertIn('composer.render();',upgraded)
+        self.assertNotIn('  renderer.render(scene,camera);',upgraded)
+        self.assertEqual(upgraded,upgrade_image_export(upgraded,self.assets))
+        self.assertEqual('unrecognised old page',upgrade_image_export('unrecognised old page',self.assets))
+        named=old.replace('renderer.render(scene,camera);',"renderer.render(scene,camera);\n  a.download='CUSTOM_BOARD.png';\n")
+        self.assertIn("a.download='CUSTOM_BOARD.png';",upgrade_image_export(named,self.assets))
+
 
 if __name__=='__main__':unittest.main()

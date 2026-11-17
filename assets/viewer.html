@@ -1390,27 +1390,32 @@ $('vFit').onclick = viewAll;
 
 function saveView(kind) {
   const previous = {pos:camera.position.clone(),up:camera.up.clone(),target:controls.target.clone(),
-    side:componentSide,aspect:camera.aspect,fov:camera.fov,ratio:renderer.getPixelRatio(),size:renderer.getSize(new THREE.Vector2())};
-  setComponentSide(kind==='top'?'top':kind==='bottom'?'bottom':'all');
-  const w=1600,h=kind==='iso'?1200:1600;
-  renderer.setPixelRatio(1); renderer.setSize(w,h,false);
-  camera.aspect=w/h; camera.fov=30; camera.updateProjectionMatrix();
-  controls.target.set(0,0,0);
-  if(kind==='bottom'){camera.up.set(0,0,1);camera.position.set(.001,-94,.001);}
-  else if(kind==='top'){camera.up.set(0,0,-1);camera.position.set(.001,94,.001);}
-  else {camera.up.set(0,1,0);camera.position.set(46,56,54);}
-  camera.lookAt(0,0,0); camera.updateMatrixWorld();
-  renderer.render(scene,camera);
-  const a=document.getElementById('exportResult');
-  a.download='GK7205V10_MB_V01_RA_PCBA_3D'+(kind==='iso'?'':'_'+kind.toUpperCase())+'.png';
-  a.href=renderer.domElement.toDataURL('image/png');
-  a.textContent='保存已生成的'+(kind==='iso'?'等轴':kind==='bottom'?'底面':'顶面')+'图';
-  a.hidden=false;
-  camera.position.copy(previous.pos);camera.up.copy(previous.up);controls.target.copy(previous.target);
-  camera.aspect=previous.aspect;camera.fov=previous.fov;camera.updateProjectionMatrix();
-  renderer.setPixelRatio(previous.ratio);renderer.setSize(previous.size.x,previous.size.y,false);
-  setComponentSide(previous.side);
-  controls.update();
+    side:componentSide,aspect:camera.aspect,fov:camera.fov,ratio:renderer.getPixelRatio(),
+    size:renderer.getSize(new THREE.Vector2())};
+  try {
+    const w=1600,h=kind==='iso'?1200:1600;
+    renderer.setPixelRatio(1);renderer.setSize(w,h,false);
+    composer.setPixelRatio(1);composer.setSize(w,h);
+    camera.aspect=w/h;camera.updateProjectionMatrix();
+    // Reuse preview framing and the complete preview pipeline for every view.
+    // A direct renderer.render() bypasses AO and changes output colour handling.
+    if(kind==='bottom')viewBottom();else if(kind==='top')viewTop();else viewIso();
+    camera.updateMatrixWorld();
+    composer.render();
+    const a=document.getElementById('exportResult');
+    a.download='GK7205V10_MB_V01_RA_PCBA_3D'+(kind==='iso'?'':'_'+kind.toUpperCase())+'.png';
+    a.href=renderer.domElement.toDataURL('image/png');
+    a.textContent='保存已生成的'+(kind==='iso'?'等轴':kind==='bottom'?'底面':'顶面')+'图';
+    a.hidden=false;
+  } finally {
+    setComponentSide(previous.side);
+    camera.position.copy(previous.pos);camera.up.copy(previous.up);controls.target.copy(previous.target);
+    camera.aspect=previous.aspect;camera.fov=previous.fov;camera.updateProjectionMatrix();
+    renderer.setPixelRatio(previous.ratio);renderer.setSize(previous.size.x,previous.size.y,false);
+    composer.setPixelRatio(previous.ratio);composer.setSize(previous.size.x,previous.size.y);
+    controls.update();
+    composer.render();
+  }
 }
 $('saveTop').onclick=()=>saveView('top');
 $('saveBottom').onclick=()=>saveView('bottom');

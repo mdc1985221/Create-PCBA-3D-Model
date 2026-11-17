@@ -142,6 +142,8 @@ def refresh(assets, root, library, user_aliases, user_root, rules=None):
 
 def upgrade_viewer(text, assets):
     """Add the current refresh UI to older project pages without changing layout."""
+    from viewer_support import upgrade_image_export
+    text=upgrade_image_export(text, assets)
     template=(Path(assets)/'viewer.html').read_text(encoding='utf8')
     # Upgrade the existing calibration controls without replacing project-specific data.
     start='<div class="row"><button id="calSave"'

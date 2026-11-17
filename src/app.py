@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.12"
+VERSION = "1.3.13"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -537,6 +537,16 @@ class Handler(BaseHTTPRequestHandler):
                 if Path(pieces[3]).suffix.lower() in {".stp", ".step"} and job["state"] != "done":
                     return self.respond({"error": "STP 尚未完成验证，请等待导出完成"}, 409)
                 root = Path(job["output"])
+                if pieces[3] == 'index.html':
+                    from viewer_support import upgrade_image_export
+                    body = upgrade_image_export((root/'index.html').read_text(encoding='utf8'), self.app.assets).encode('utf8')
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.send_header('Content-Length', str(len(body)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
                 return self.file(root, pieces[3])
             if url.path == "/favicon.ico":
                 self.send_response(204)
