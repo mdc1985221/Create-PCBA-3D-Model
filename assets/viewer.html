@@ -9,6 +9,7 @@
     --txt:#e7ebf2; --dim:#858da0; --acc:#4ea1ff; --acc2:#ffb454;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
     font-family:"Inter","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;
     -webkit-font-smoothing:antialiased}
@@ -1524,6 +1525,22 @@ window.viewAll = viewAll; window.viewTop = viewTop; window.viewBottom = viewBott
 window.DATA = DATA; window.setSelected = setSelected; window.frameOn = frameOn;
 window.setComponentSide=setComponentSide;
 window.__ready = true;
+if(DATA.board_only){
+  setPanelCollapsed(true,false);
+  for(const id of ['cComp','cFilm','cTag'])$(id).closest('label').hidden=true;
+  for(const id of ['refSearchForm','modelRefresh','bomFilter'])$(id).closest('.sec').hidden=true;
+  $('bmWrap').hidden=true;
+  const bgaButton=document.querySelector('button[onclick*="bga.html"]');if(bgaButton)bgaButton.closest('.sec').hidden=true;
+  for(const id of ['manufacturingPanel','assemblyPanel'])$(id).hidden=true;
+  $('hudHeader').querySelector('strong').textContent='PCB / STEP';
+  $('hudContent').querySelector('.h').textContent='PCB 裸板';
+  $('hudBody').textContent='检查板框、孔槽和板厚；板色保存后可在此导出 STEP。';
+  $('vPanel').textContent='导出 STEP';$('vPanel').title='展开 PCB 的 STEP 导出工具';
+  const keep=new Set([$('calExport').parentElement,$('calDownload'),$('calStatus')]);
+  for(const child of $('calibrationPanel').children)if(!keep.has(child))child.hidden=true;
+  $('calRemoveRule').hidden=true;$('calExport').textContent='导出 PCB STEP';
+  $('calStatus').textContent='仅导出板体与板面图层，不含器件。';
+}
 /* MODEL_REFRESH_SCRIPT */
 const modelRefreshButton=document.getElementById('modelRefresh'),modelRefreshStatus=document.getElementById('modelRefreshStatus');
 const modelRefreshKey='pcba-refresh-'+calJobId;

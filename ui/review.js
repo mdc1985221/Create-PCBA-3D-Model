@@ -5,7 +5,7 @@ function resetReview(){reviewVersion++;reviewData=null;excludedRows.bom.clear();
 async function removeSelectedFile(index){if(busy)return;selected.splice(index,1);await chooseFiles([]);}
 async function refreshReview(){
   const version=++reviewVersion;
-  if(!info||!selected.length||!$('xy').value)return;
+  if(!info||!selected.length||!$('xy').value||pcbOnly())return;
   $('reviewStatus').textContent='正在核对 BOM、坐标和模型映射…';
   try{
     const files=await Promise.all(selected.map(readBase64));

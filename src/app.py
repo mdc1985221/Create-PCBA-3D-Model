@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.13"
+VERSION = "1.3.14"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -358,12 +358,17 @@ class Application:
         if not isinstance(config, dict):
             raise ValueError("配置格式错误")
         config = dict(config)
+        if not sample:
+            board_only=config.get('board_only',not bool(config.get('xy')))
+            if not isinstance(board_only,bool):raise ValueError('board_only 必须为布尔值')
+            config['board_only']=board_only
+            if board_only:config.update(xy='',bom='',mapping={},ref_rotation={})
         config["name"] = safe_name(config.get("name", "GK7205V10示例" if sample else "PCBA"))
         mapping = config.get("mapping", {})
         if not isinstance(mapping, dict):
             raise ValueError("封装映射应为 JSON 对象")
         library = self.library()
-        if not library:
+        if not library and not config.get('board_only'):
             raise ValueError("模型库缺失，请保留完整工具文件后重试")
         for key, value in mapping.items():
             if not isinstance(key, str) or not isinstance(value, str) or value not in library:
@@ -374,7 +379,7 @@ class Application:
         files = {}
         if not sample:
             files = decode_uploads(request.get("files", []))
-            if not config.get("xy"):
+            if not config.get("xy") and not config.get('board_only'):
                 raise ValueError("请选择 XY 坐标文件")
         elif not (self.assets / "sample" / "index.html").is_file():
             raise ValueError("当前工具没有打包示例工程")

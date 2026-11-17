@@ -478,7 +478,17 @@ def deduplicate_slots(slots, tolerance=.001):
     return kept,len(slots)-len(kept)
 
 
-def infer_board(primitives, points):
+def board_candidates(primitives):
+    candidates=[]
+    for loop in closed_contours(primitives):
+        xs,ys=zip(*loop);box=(min(xs),min(ys),max(xs),max(ys));x0,y0,x1,y1=box;area=polygon_area(loop)
+        if min(x1-x0,y1-y0)<1 or max(x1-x0,y1-y0)>500 or area<1:continue
+        if any(max(abs(a-b) for a,b in zip(box,q['bounds']))<.002 and abs(area-q['area'])<.01 for q in candidates):continue
+        candidates.append(dict(bounds=box,area=area,loop=loop))
+    return sorted(candidates,key=lambda q:(-round(q['area'],2),q['bounds'][1],q['bounds'][0]))
+
+
+def infer_board(primitives, points, selected_bounds=None):
     """Choose the smallest closed outline enclosing the source XY positions.
 
     In a panel, the XY table identifies the populated cell. Never derive a
@@ -497,13 +507,26 @@ def infer_board(primitives, points):
             if (ay > y) != (by > y) and x < ax+(y-ay)*(bx-ax)/(by-ay): inside = not inside
         return inside
 
-    candidates = []
-    for loop in closed_contours(primitives):
-        box = bounds(loop); x0, y0, x1, y1 = box; area = polygon_area(loop)
-        if min(x1-x0, y1-y0) < 1 or max(x1-x0, y1-y0) > 500 or area < 1: continue
-        # Allegro sometimes draws the same outline twice with sub-micron offsets.
-        if any(max(abs(a-b) for a, b in zip(box, item['bounds'])) < .002 and abs(area-item['area']) < .01 for item in candidates): continue
-        candidates.append(dict(bounds=box, area=area, loop=loop))
+    candidates = board_candidates(primitives)
+    if selected_bounds is not None:
+        if not isinstance(selected_bounds,(list,tuple)) or len(selected_bounds)!=4 or any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in selected_bounds):
+            raise ValueError('所选板框边界无效，请重新识别板框')
+        chosen=[q for q in candidates if max(abs(a-b) for a,b in zip(q['bounds'],selected_bounds))<.002]
+        if len(chosen)!=1:raise ValueError('所选板框与当前 Gerber 不一致，请重新识别并选择板框')
+        x0,y0,x1,y1=chosen[0]['bounds']
+        return dict(origin=[x0,y0],size=[x1-x0,y1-y0],candidates=len(candidates),matched_positions=0,
+                    coordinate_basis='无 XY：使用界面选定的 Gerber 闭合板框',selected_bounds=list(selected_bounds))
+    if not points:
+        # Without XY, only accept a unique complete outer contour. Do not
+        # silently pick a cell, drill legend box or the smallest inner cutout.
+        outer=[q for q in candidates if all(other is q or (
+            q['area']>other['area'] and all(near_inside(p,q['loop'],.002) for p in other['loop'])
+        ) for other in candidates)]
+        if len(outer)!=1:
+            raise ValueError('无 XY，无法唯一确定 PCB 完整外框：存在多个独立闭合轮廓或未闭合板框。请在图层文件名中指定真正板框；或关闭自动识别，填写板宽高及 Gerber 原点。不会自动选取拼板中的任一单板。')
+        x0,y0,x1,y1=outer[0]['bounds']
+        return dict(origin=[x0,y0],size=[x1-x0,y1-y0],candidates=len(candidates),matched_positions=0,
+                    coordinate_basis='无 XY：Gerber 唯一完整外轮廓（可能为拼板）')
     compatible = [q for q in candidates if points and all(
         q['bounds'][0]-.5 <= x <= q['bounds'][2]+.5 and q['bounds'][1]-.5 <= y <= q['bounds'][3]+.5
         and near_inside((x, y), q['loop']) for x, y in points)]

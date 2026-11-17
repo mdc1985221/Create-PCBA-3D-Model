@@ -285,6 +285,11 @@ def copy_native_model_parts(assets,out,models,user_root=None):
             target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,target);copied.add(target)
 def build(assets,out,files,config,progress):
     config=dict(config)
+    board_only=config.get('board_only',not bool(config.get('xy')))
+    if not isinstance(board_only,bool):raise ValueError('board_only 必须为布尔值')
+    config['board_only']=board_only
+    if board_only:
+        config.update(xy='',bom='',mapping={},ref_rotation={},ref_calibration={},calibration_rules={})
     assets=Path(assets);out=Path(out);out.mkdir(parents=True,exist_ok=True)
     inputs=out/'输入资料';inputs.mkdir(exist_ok=True)
     warnings=[];saved={}
@@ -305,9 +310,15 @@ def build(assets,out,files,config,progress):
                     if pp.is_absolute() or '..' in pp.parts or ':' in q.filename:raise ValueError('ZIP 包含不安全的路径')
                     if pp.suffix.lower() in ['.art','.gbr','.ger','.gtl','.gbl','.gts','.gbs','.gto','.gbo','.gtp','.gbp','.gko','.gm1','.gml','.drl','.rou','.xln','.exc','.txt','.csv','.tsv','.xlsx','.xls']:
                         save_input(pp.name,z.read(q))
-    xy=inputs/Path(config['xy']).name
-    progress('读取坐标和 BOM')
-    rows=read_table(xy);start,col=header(rows,['ref','x','y'])
+    if board_only:
+        progress('仅生成 PCB 裸板，无需 XY / BOM / 器件模型')
+        rows=[['Ref','X','Y','Side']];start=0;col=dict(ref=0,x=1,y=2,side=3)
+        warnings.append('PCB 裸板模式：仅生成板体、孔槽和 Gerber 板层，不放置器件；板厚采用输入值。')
+    else:
+        if not config.get('xy'):raise ValueError('PCBA 模式需要 XY 坐标；只有制版资料时请选择“PCB 裸板”')
+        xy=inputs/Path(config['xy']).name
+        progress('读取坐标和 BOM')
+        rows=read_table(xy);start,col=header(rows,['ref','x','y'])
     get=lambda row,k,default='':row[col[k]] if k in col and col[k]<len(row) else default
     if config.get('unit','mm') not in ('mm','mil'):raise ValueError('坐标单位只能是 mm 或 mil')
     scale=.0254 if config.get('unit')=='mil' else 1
@@ -397,7 +408,7 @@ def build(assets,out,files,config,progress):
             value,description,material_name,material_code=accessory_candidates[ref]
             pending.append(dict(ref=ref,pkg='',val=value,desc=description,name=material_name,code=material_code,reason='missing_coordinates',message='缺少坐标或 XY 标为 NC'))
         warnings.append('部分预览：'+str(len(set(missing)))+' 个 BOM 位号缺少坐标，未放置：'+','.join(sorted(set(missing))))
-    if not placements:raise ValueError('BOM/坐标表没有可生成的实装器件')
+    if not placements and not board_only:raise ValueError('BOM/坐标表没有可生成的实装器件')
     mapping={};unknown=[]
     for p in placements.values():
         key=a.get(norm(p['pkg']))
@@ -410,17 +421,19 @@ def build(assets,out,files,config,progress):
         if not config.get('allow_partial',True):
             raise ValueError('待匹配封装：'+', '.join(sorted(set(unknown)))+'。请在封装映射中设置对应模型后生成。')
         warnings.append('部分预览：以下封装尚未匹配模型，器件保留在待处理清单：'+', '.join(sorted(set(unknown))))
-    progress('核对 BOM、坐标封装与 3D 模型')
+    if not board_only:progress('核对 BOM、坐标封装与 3D 模型')
     from package_check import check,save,report_warning
     package_validation=check(placements,bom,mapping,library)
     save(out,package_validation)
-    warnings.append(report_warning(package_validation))
+    if not board_only:warnings.append(report_warning(package_validation))
     w,h,th=[num(config.get(k,v)) for k,v in [('width',38),('height',38),('thickness',1.6)]]
     if min(w,h,th)<=0 or max(w,h)>500:raise ValueError('板尺寸需为正，最大支持 500 mm')
     radius=num(config.get('radius',0));ox=num(config.get('gerber_x0',0));oy=num(config.get('gerber_y0',0))
     if radius<0 or radius>min(w,h)/2:raise ValueError('圆角半径需在 0 到短边一半之间')
     def find(kind):
         explicit=config.get('layers',{}).get(kind)
+        if kind=='outline' and board_only and config.get('pcb_outline'):
+            explicit=config['pcb_outline'].get('file') or explicit
         if explicit:
             target=inputs/Path(explicit).name
             if not target.is_file():raise ValueError('指定图层文件不存在：'+str(explicit))
@@ -464,17 +477,22 @@ def build(assets,out,files,config,progress):
     if config.get('auto_board',False):
         if not outline_file:
             raise ValueError('未识别到板框图层。支持 GKO / Edge.Cuts / 任意编号 panel.art，以及含板框的 dill / dril / drill 钻孔图；若使用其他文件名，请在高级设置的图层文件名中指定，例如 {"outline":"板框.gbr"}。若确实缺少板框，请补充闭合板框 Gerber，或关闭“自动识别单板与原点”后填写尺寸、圆角与原点。')
-        progress('识别单板轮廓并对齐 Gerber / XY 原点')
+        progress('识别 PCB 板框与 Gerber 原点' if board_only else '识别单板轮廓并对齐 Gerber / XY 原点')
         dx=num(config.get('xy_dx',0));dy=num(config.get('xy_dy',0))
         points=[(p['x']-dx,p['y']-dy) for p in placements.values() if p['population']!='accessory']
-        board_detection=gerber.infer_board(outline_primitives,points)
+        selection=config.get('pcb_outline') if board_only else None
+        board_detection=gerber.infer_board(outline_primitives,points,selection.get('bounds') if selection else None)
         ox,oy=board_detection['origin'];w,h=board_detection['size']
         for p in placements.values():p['x']-=dx+ox;p['y']-=dy+oy
         config.update(width=w,height=h,gerber_x0=ox,gerber_y0=oy,xy_dx=-ox,xy_dy=-oy,radius=0)
         radius=0 # The Gerber polygon already includes its rounded corners.
         board_detection['file']=outline_file.name
-        warnings.append(f'自动识别单板 {w:.3f} × {h:.3f} mm，源原点 ({ox:.4f}, {oy:.4f})；XY 已同步平移，保留 Gerber 圆角。识别到 {board_detection["candidates"]} 个闭合候选，按所选 XY 确定单板范围。板厚仍采用输入值。')
-        progress(f'单板 {w:.3f} × {h:.3f} mm；原点 ({ox:.4f}, {oy:.4f})，XY 已对齐')
+        if board_only:
+            basis='所选闭合板框' if selection else '唯一完整外轮廓'
+            warnings.append(f'无 XY：按 Gerber {basis}生成 {w:.3f} × {h:.3f} mm PCB，源原点 ({ox:.4f}, {oy:.4f})；请核对单板/拼板范围。板厚采用输入值。')
+        else:
+            warnings.append(f'自动识别单板 {w:.3f} × {h:.3f} mm，源原点 ({ox:.4f}, {oy:.4f})；XY 已同步平移，保留 Gerber 圆角。识别到 {board_detection["candidates"]} 个闭合候选，按所选 XY 确定单板范围。板厚仍采用输入值。')
+        progress(f'PCB {w:.3f} × {h:.3f} mm；原点 ({ox:.4f}, {oy:.4f})'+('' if board_only else '，XY 已对齐'))
     gerber.OX,gerber.OY,gerber.BW,gerber.BH,gerber.PXM=ox,oy,w,h,min(48,3000/max(w,h))
     gerber.SIZE=(round(w*gerber.PXM),round(h*gerber.PXM))
     if outline_file:
@@ -502,21 +520,22 @@ def build(assets,out,files,config,progress):
         included=[q for q in hh if -q['d']/2<=q['x']<=w+q['d']/2 and -q['d']/2<=q['y']<=h+q['d']/2]
         local_slots=[q for q in ss if max(x for x,y in q)>=0 and min(x for x,y in q)<=w and max(y for x,y in q)>=0 and min(y for x,y in q)<=h]
         boundary_hits=[q for q in included if q['x']-q['d']/2<0 or q['x']+q['d']/2>w or q['y']-q['d']/2<0 or q['y']+q['d']/2>h]
-        # Recognise the standard 20-mil NPTH / 40-mil-pitch mouse-bite arrays
+        # Recognise known NPTH mouse-bite arrays: 20mil/40mil and 0.6mm/60mil.
         # used in Allegro fabrication panels. They are separation tooling,
         # not component holes. Retain the supplied smooth single-board outline
         # and report every excluded hit; other boundary holes remain errors.
         breakaway=[]
         for axis,edge,other in [('x',0,'y'),('x',w,'y'),('y',0,'x'),('y',h,'x')]:
-            candidates=sorted([q for q in boundary_hits if q.get('plated') is False and abs(q['d']-.508)<.001 and abs(q[axis]-edge)<.001],key=lambda q:q[other])
-            groups=[]
-            for q in candidates:
-                if not groups or abs(q[other]-groups[-1][-1][other]-1.016)>.002:groups.append([])
-                groups[-1].append(q)
-            breakaway.extend(q for group in groups if len(group)>=4 for q in group)
+            for diameter,pitch in [(.508,1.016),(.6,1.524)]:
+                candidates=sorted([q for q in boundary_hits if q.get('plated') is False and abs(q['d']-diameter)<.001 and abs(q[axis]-edge)<.001],key=lambda q:q[other])
+                groups=[]
+                for q in candidates:
+                    if not groups or abs(q[other]-groups[-1][-1][other]-pitch)>.002:groups.append([])
+                    groups[-1].append(q)
+                breakaway.extend(q for group in groups if len(group)>=4 for q in group)
         if breakaway:
             included=[q for q in included if q not in breakaway];boundary_hits=[q for q in boundary_hits if q not in breakaway]
-            warnings.append(f.name+'：识别并排除 '+str(len(breakaway))+' 个板边 20mil/40mil 成组拼板分离孔；预览采用单板平滑外轮廓，断板残痕未建模')
+            warnings.append(f.name+'：识别并排除 '+str(len(breakaway))+' 个已知规格的板边成组 NPTH 拼板分离孔；预览采用单板平滑外轮廓，断板残痕未建模')
         info.update(included_hits=len(included),excluded_panel_hits=len(hh)-len(included),excluded_breakaway_hits=breakaway,boundary_intersecting_hits=len(boundary_hits),included_slots=len(local_slots),excluded_panel_slots=len(ss)-len(local_slots))
         holes.extend(included);slots.extend(local_slots);drill_reports.append(info);warnings.extend(info.get('warnings',[]))
         if info['excluded_panel_hits'] or info['excluded_panel_slots']:warnings.append(f.name+'：排除板框以外命中 '+str(info['excluded_panel_hits'])+' 孔 / '+str(info['excluded_panel_slots'])+' 槽；请核对原点和单板/拼板范围')
@@ -582,7 +601,8 @@ def build(assets,out,files,config,progress):
         placements.pop(ref,None)
     inferred_accessories=[ref for ref in inferred_accessories if ref in placements]
     # Four-way pose matching against paste; keep raw angle on symmetric ties.
-    pose={};progress('匹配器件方向')
+    pose={}
+    if not board_only:progress('匹配器件方向')
     import numpy as np
     from scipy.optimize import linear_sum_assignment
     def contacts(model):
@@ -654,7 +674,7 @@ def build(assets,out,files,config,progress):
     project_name=str(config.get('name') or 'PCBA').strip()
     if not project_name or len(project_name)>100 or re.search(r'[<>:"/\\|?*\x00-\x1f]',project_name) or project_name.endswith(('.', ' ')):
         raise ValueError('工程名称需为 1–100 个普通字符，不能含 Windows 文件名禁用字符')
-    data=dict(board=dict(w=w,h=h,name=project_name,thickness=th),placements=placements,pending_components=pending,excluded_rows=excluded_records,panels=[dict(x=0,y=0)],geom=geom,bom=bom,counts=dict(top=sum(p['side']=='top' and p['population']!='accessory' for p in placements.values()),bottom=sum(p['side']=='bottom' and p['population']!='accessory' for p in placements.values()),accessories=len(inferred_accessories)),coordinate_frame=dict(gerber_x0=ox,gerber_y0=oy,unit='mm',xy_offsets_mm=[num(config.get('xy_dx',0)),num(config.get('xy_dy',0))]))
+    data=dict(board_only=board_only,board=dict(w=w,h=h,name=project_name,thickness=th),placements=placements,pending_components=pending,excluded_rows=excluded_records,panels=[dict(x=0,y=0)],geom=geom,bom=bom,counts=dict(top=sum(p['side']=='top' and p['population']!='accessory' for p in placements.values()),bottom=sum(p['side']=='bottom' and p['population']!='accessory' for p in placements.values()),accessories=len(inferred_accessories)),coordinate_frame=dict(gerber_x0=ox,gerber_y0=oy,unit='mm',xy_offsets_mm=[num(config.get('xy_dx',0)),num(config.get('xy_dy',0))]))
     (out/'data.json').write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')),encoding='utf8')
     html=(assets/'viewer.html').read_text(encoding='utf8')
     # JSON-escape names, and neutralize HTML script terminators inside strings.
@@ -668,10 +688,12 @@ def build(assets,out,files,config,progress):
     component_summary=f'{len(placements)-len(inferred_accessories)} 个'+('已显示器件' if pending else '实装器件')+(f' + {len(inferred_accessories)} 件附件' if inferred_accessories else '')+(f' · {len(pending)} 个待处理（部分预览）' if pending else '')
     html=html.replace('242 个实装器件 + 1 件 Sensor 保护膜',component_summary).replace('45 个 NC · 3 个测试点 · BOM 已核对',f'{len(set(nc))} 个明确 NC · {len(xy_not_in_bom)} 个 XY 位号不在实装 BOM')
     html=html.replace('72 行 / 242 器件 + 1 保护膜',f'{len(bom)} 行 / {len(placements)} 器件')
+    if board_only:
+        html=html.replace(component_summary,'PCB 裸板 · 未放置器件').replace(f'{len(set(nc))} 个明确 NC · {len(xy_not_in_bom)} 个 XY 位号不在实装 BOM','无需 XY / BOM · 请核对板框、孔槽与板厚')
     html=html.replace('${DATA.bom.length} 行 / 242 器件 + 1 保护膜','${DATA.bom.length} 行 / ${Object.keys(DATA.placements).length} 器件')
     html=re.sub(r"const ASSET_VERSION = [^;]+;",lambda m:'const ASSET_VERSION = '+json.dumps(str(__import__('time').time()))+';',html,count=1)
     (out/'index.html').write_text(html,encoding='utf8');shutil.copytree(assets/'vendor',out/'vendor',dirs_exist_ok=True)
-    report=dict(components=len(placements)-len(inferred_accessories),accessories=len(inferred_accessories),inferred_accessories=inferred_accessories,top=data['counts']['top'],bottom=data['counts']['bottom'],nc=sorted(set(nc)),xy_not_in_bom=xy_not_in_bom,bom_missing_coordinates=sorted(set(missing)),pending_components=pending,unmatched_footprints=sorted(set(unknown)),incomplete=bool(pending),excluded_rows=excluded_records,layers=layers,models=mapping,auto_pose=pose,warnings=warnings,board_mm=[w,h,th],origin_mm=[ox,oy],outline_basis=outline_basis,holes=len(holes),routed_slots=len(slots),duplicate_slots_removed=duplicate_slots,drills=drill_reports,
+    report=dict(board_only=board_only,components=len(placements)-len(inferred_accessories),accessories=len(inferred_accessories),inferred_accessories=inferred_accessories,top=data['counts']['top'],bottom=data['counts']['bottom'],nc=sorted(set(nc)),xy_not_in_bom=xy_not_in_bom,bom_missing_coordinates=sorted(set(missing)),pending_components=pending,unmatched_footprints=sorted(set(unknown)),incomplete=bool(pending),excluded_rows=excluded_records,layers=layers,models=mapping,auto_pose=pose,warnings=warnings,board_mm=[w,h,th],origin_mm=[ox,oy],outline_basis=outline_basis,holes=len(holes),routed_slots=len(slots),duplicate_slots_removed=duplicate_slots,drills=drill_reports,
                 package_check=package_validation,board_detection=board_detection,resolved_config=dict(width=w,height=h,thickness=th,radius=radius,gerber_x0=ox,gerber_y0=oy,xy_dx=num(config.get('xy_dx',0)),xy_dy=num(config.get('xy_dy',0))))
     (out/'导入检查.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
     (out/'待处理器件.json').write_text(json.dumps(pending,ensure_ascii=False,indent=2),encoding='utf8')

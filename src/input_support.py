@@ -1,5 +1,6 @@
 """Input discovery shared by the local API and generation import."""
 import io
+import re
 import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -66,7 +67,7 @@ def expand_sources(files):
 def inspect_files(files):
     from generator import read_table, header, num, side_value
     sources, warnings = expand_sources(files)
-    candidates, signatures = [], []
+    candidates, signatures, outlines = [], [], []
     with tempfile.TemporaryDirectory(prefix='pcba-input-inspect-') as temporary:
         for item in sources.values():
             if Path(item['name']).suffix.lower() not in TABLE_EXTENSIONS:
@@ -103,8 +104,21 @@ def inspect_files(files):
                 if path.suffix.lower() != '.txt':
                     warnings.append(item['source'] + '：' + str(error))
     if not any('xy' in item['roles'] for item in candidates):
-        warnings.append('没有找到带位号、X、Y列的坐标表。请用“选择文件夹”递归导入生产资料，或补充 XLSX / XLS / CSV 坐标表；只有 Gerber 不能确定器件位置。')
-    return dict(candidates=candidates, warnings=list(dict.fromkeys(warnings)), discovered_files=len(sources),
+        warnings.append('未找到 XY 坐标表：可直接生成 PCB 裸板预览和 STEP，无需 BOM 或模型。若要放置器件生成 PCBA，请补充生产坐标表。')
+        from gerber import parse,board_candidates
+        preferred=[item for item in sources.values() if re.search(r'\.(?:gko|gm1|gml)$|^\d*panel\.art$|(?:^|[-_. ])(?:edge[_. -]?cuts|outline|board[_. -]?outline)\.(?:gbr|ger|art)$',item['name'],re.I)]
+        drawings=[item for item in sources.values() if re.fullmatch(r'\d*(?:dill|dril|drill)(?:[_. -]?(?:map|drawing|draw))?\.(?:art|gbr|ger)',item['name'],re.I)]
+        with tempfile.TemporaryDirectory(prefix='pcb-outline-inspect-') as temporary:
+            for item in preferred or drawings:
+                try:
+                    path=Path(temporary)/item['name'];path.write_bytes(item['data'])
+                    found=board_candidates(parse(path))
+                    # Largest shapes first; include small loops for deliberate selection,
+                    # never silently treat them as holes or component locations.
+                    outlines.extend(dict(file=item['name'],bounds=list(q['bounds']),area=q['area'],
+                                         size=[q['bounds'][2]-q['bounds'][0],q['bounds'][3]-q['bounds'][1]]) for q in found)
+                except (ValueError,OSError) as error:warnings.append(item['name']+'：板框识别失败：'+str(error))
+    return dict(candidates=candidates, outlines=outlines,warnings=list(dict.fromkeys(warnings)), discovered_files=len(sources),
                 xy_count=sum('xy' in item['roles'] for item in candidates))
 
 
@@ -113,6 +127,8 @@ def review_files(files, config, model_aliases, model_ids):
     from generator import read_table, header, refs, not_fitted, norm, num, bom_duplicate_error, bom_row_location
     sources, warnings = expand_sources(files)
     result = dict(bom_rows=[], xy_rows=[], footprints=[], warnings=warnings)
+    if config.get('board_only'):
+        return dict(result,missing_coordinates=[],matched=0,unmatched=0)
     placements, populated = {}, set()
     for role in ('xy', 'bom'):
         selected = config.get(role)
