@@ -8,6 +8,71 @@ import math
 from pathlib import Path
 
 
+def stroke_glyphs(primitives):
+    """Conservative single-line A / serif-1 recognition, not general OCR.
+
+    Match whole connected glyphs in four orientations. Bare stems, arrows,
+    arbitrary triangles and incomplete characters must never imply pin one.
+    """
+    def distance(p, a, b):
+        dx,dy=b[0]-a[0],b[1]-a[1];den=dx*dx+dy*dy
+        t=max(0,min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/den)) if den else 0
+        return math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)
+    segments=[]
+    for primitive in primitives:
+        if primitive[0]!='stroke':continue
+        for a,b in zip(primitive[2],primitive[2][1:]):
+            if .04<math.dist(a,b)<1.6:segments.append((a,b))
+    groups=[];pending=set(range(len(segments)))
+    while pending:
+        group=[pending.pop()];queue=group.copy()
+        while queue:
+            a,b=segments[queue.pop()]
+            for j in list(pending):
+                c,d=segments[j]
+                if min(distance(a,c,d),distance(b,c,d),distance(c,a,b),distance(d,a,b))<.035:
+                    pending.remove(j);group.append(j);queue.append(j)
+        if 3<=len(group)<=9:groups.append([segments[i] for i in group])
+    templates={
+        'A': [((0,0),(.5,1)),((.5,1),(1,0)),((.21,.42),(.79,.42))],
+        '1': [((.18,.75),(.5,1)),((.5,1),(.5,0)),((0,0),(1,0))],
+    }
+    def samples(lines):
+        return [(a[0]+(b[0]-a[0])*i/12,a[1]+(b[1]-a[1])*i/12)
+                for a,b in lines for i in range(13)]
+    matched=[]
+    for group in groups:
+        points=[p for line in group for p in line]
+        xmin,ymin=map(min,zip(*points));xmax,ymax=map(max,zip(*points))
+        if not .2<=min(xmax-xmin,ymax-ymin) or max(xmax-xmin,ymax-ymin)>1.4:continue
+        found=set()
+        for turn in range(4):
+            def rotate(p):
+                x,y=p
+                for _ in range(turn):x,y=-y,x
+                return x,y
+            rotated=[[rotate(p) for p in line] for line in group]
+            pts=[p for line in rotated for p in line]
+            left,bottom=map(min,zip(*pts));right,top=map(max,zip(*pts))
+            if not .35<=(right-left)/(top-bottom)<=1.05:continue
+            lines=[tuple(((x-left)/(right-left),(y-bottom)/(top-bottom)) for x,y in line) for line in rotated]
+            for glyph,template in templates.items():
+                error=max(max(min(distance(p,*line) for line in target) for p in samples(source))
+                          for source,target in [(lines,template),(template,lines)])
+                if error<.105:found.add(glyph)
+        if len(found)==1:matched.append((group,(xmin,ymin,xmax,ymax),next(iter(found))))
+    for group,box,glyph in matched:
+        xmin,ymin,xmax,ymax=box;margin=max(xmax-xmin,ymax-ymin)*.28
+        # Do not read an A inside VAA, or 1 inside a reference designator, as
+        # a pin label. An adjacent recognized A/1 pair is the sole exception.
+        neighbours=[line for line in segments if line not in group and
+                    not (max(p[0] for p in line)<xmin-margin or min(p[0] for p in line)>xmax+margin or
+                         max(p[1] for p in line)<ymin-margin or min(p[1] for p in line)>ymax+margin)]
+        partner=[line for other,_,name in matched if name!=glyph for line in other]
+        if any(line not in partner for line in neighbours):continue
+        yield (xmin+xmax)/2,(ymin+ymax)/2,glyph
+
+
 def detect(root, result, data):
     unknown=dict(corner='unknown',status='unresolved',style='dot',evidence=[],
                  note='未找到唯一可靠的第一脚标记，请对照制板丝印或规格书确认。')
@@ -77,6 +142,8 @@ def detect(root, result, data):
                 (abs(b[0]-x)<.04 and abs(a[1]-y)<.04)):
                 add((a[0]+b[0])/2,(a[1]+b[1])/2,'triangle','封装角部斜线 / 倒角')
     for x,y,style,kind in flashes:add(x,y,style,kind)
+    for x,y,glyph in stroke_glyphs(near):
+        add(x,y,'dot','单线丝印字符 '+glyph+'（角部匹配）')
     for loop in loops:
         if math.dist(loop[0],loop[-1])<.02:loop=loop[:-1]
         xs,ys=zip(*loop);bw,bh=max(xs)-min(xs),max(ys)-min(ys)

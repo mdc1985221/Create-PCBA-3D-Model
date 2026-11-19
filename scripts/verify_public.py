@@ -1,11 +1,14 @@
 """Small, synthetic end-to-end check; contains no real production board data."""
-import json, math, re, sys
+import argparse, json, math, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output',type=Path,default=ROOT/'_work/public-smoke',help='Generated smoke-test board directory')
+    args=parser.parse_args()
     if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
     from generator import build, aliases
@@ -28,7 +31,7 @@ def main():
                 assert not re.search(r'\b(?:sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{25,})', p.read_text(encoding='utf8')), p
     source = ROOT/'examples/synthetic'
     files = {p.name:p.read_bytes() for p in source.iterdir() if p.is_file() and p.suffix != '.md'}
-    output = ROOT/'_work/public-smoke';output.mkdir(parents=True, exist_ok=True)
+    output = args.output;output.mkdir(parents=True, exist_ok=True)
     report = build(ROOT/'assets', output, files, dict(name='PCBA3D_Synthetic', xy='xy.csv', bom='bom.csv',
         width=40, height=30, thickness=1.6, auto_board=True, auto_pose=False, step=True,
         mapping=user_aliases, user_library_root=str(ROOT/'用户模型库')), print)
@@ -43,7 +46,8 @@ def main():
         assert row['eligible'] and math.hypot(row['x']-x,row['y']-y)<.001 and row['rotation']==rot, row
     result=dict(ok=True,models=len(library),components=6,top=4,bottom=2,step_readback=True,
                 coordinates=True,synthetic_only=True,api_credentials_included=False)
-    (ROOT/'_work/public-verification.json').write_text(json.dumps(result,indent=2),encoding='utf8')
+    report_path=ROOT/'_work/public-verification.json';report_path.parent.mkdir(parents=True,exist_ok=True)
+    report_path.write_text(json.dumps(result,indent=2),encoding='utf8')
     print(json.dumps(result))
 
 if __name__=='__main__':main()

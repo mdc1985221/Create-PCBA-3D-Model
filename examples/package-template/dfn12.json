@@ -1,0 +1,17 @@
+{
+  "name": "DEMO_DFN12_3x2",
+  "width": 3.0,
+  "depth": 2.0,
+  "height": 0.75,
+  "stand_off": 0.02,
+  "pin_count": 12,
+  "pitch": 0.5,
+  "pin_width": 0.25,
+  "pin_length": 0.3,
+  "metal_height": 0.203,
+  "exposed_width": 2.0,
+  "exposed_depth": 0.9,
+  "pin1": "bl",
+  "marking": "DEMO12",
+  "recess": 0.025
+}

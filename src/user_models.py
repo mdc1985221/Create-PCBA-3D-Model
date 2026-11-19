@@ -81,12 +81,15 @@ def mesh(shape, material):
     from OCP.TopoDS import TopoDS
     from OCP.TopLoc import TopLoc_Location
     BRepMesh_IncrementalMesh(shape,.025,False,.2,False).Perform()
-    vertices=[];indices=[];seen={};ex=TopExp_Explorer(shape,TopAbs_FACE)
+    vertices=[];indices=[];ex=TopExp_Explorer(shape,TopAbs_FACE)
     while ex.More():
         face=TopoDS.Face(ex.Current());location=TopLoc_Location()
         tri=BRep_Tool.Triangulation_s(face,location)
         if tri is not None:
-            ids={}
+            # Share vertices within a CAD face, preserving smooth cylinders,
+            # but keep adjacent faces separate for sharp mold/engraving edges.
+            # Global sharing blends pocket walls into flat chip surfaces.
+            ids={};seen={}
             for k in range(1,tri.NbNodes()+1):
                 p=tri.Node(k).Transformed(location.Transformation())
                 xyz=tuple(round(v,7) for v in (p.X(),p.Y(),p.Z()))

@@ -35,6 +35,8 @@ jobs:
           python scripts/test_board_appearance.py
           python scripts/test_bga.py
           python scripts/test_pin1.py
+          python scripts/test_model_normals.py
+          python scripts/test_dfn_demo.py
           python scripts/test_package_check.py
           python scripts/test_pcb_only.py
           python scripts/test_project_refresh.py

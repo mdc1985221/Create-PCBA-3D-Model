@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 sys.path[:0]=[str(Path(__file__).resolve().parents[1]/'src')]
-from pin1_support import detect
+from pin1_support import detect, stroke_glyphs
 
 
 class Pin1Tests(unittest.TestCase):
@@ -69,6 +69,44 @@ class Pin1Tests(unittest.TestCase):
 
     def test_unmarked_rectangle_is_not_pin1(self):
         self.silk()
+        self.assertEqual(detect(self.root,self.result,self.data)['corner'],'unknown')
+
+    def test_stroke_labels_rotate_without_guessing_bare_numbers(self):
+        templates={
+            'A':[((0,0),(.5,1)),((.5,1),(1,0)),((.21,.42),(.79,.42))],
+            '1':[((.18,.75),(.5,1)),((.5,1),(.5,0)),((0,0),(1,0))],
+        }
+        for label,lines in templates.items():
+            for angle in [0,90,180,270]:
+                a=math.radians(angle);c,s=math.cos(a),math.sin(a)
+                primitives=[('stroke',True,[(2+.6*x*c-.8*y*s,3+.6*x*s+.8*y*c) for x,y in line],.1) for line in lines]
+                found=list(stroke_glyphs(primitives))
+                self.assertEqual([g[2] for g in found],[label],(label,angle,found))
+        for lines in [[((0,0),(0,1))],[((0,0),(.5,1)),((.5,1),(1,0))],
+                      [((0,1),(1,1)),((1,1),(.3,0))]]:
+            self.assertEqual(list(stroke_glyphs([('stroke',True,line,.1) for line in lines])),[])
+
+    def test_power_label_is_not_a_pin_label(self):
+        # A next to V is part of VAA, not an isolated corner label.
+        lines=[((0,0),(.3,.8)),((.3,.8),(.6,0)),((.126,.336),(.474,.336)),
+               ((-.7,.8),(-.4,0)),((-.4,0),(-.1,.8))]
+        self.assertEqual(list(stroke_glyphs([('stroke',True,line,.1) for line in lines])),[])
+
+    def test_corner_label_and_conflicting_mark(self):
+        self.silk()
+        path=self.root/'输入资料/part.gto'
+        original=path.read_text(encoding='ascii')
+        # A beside the lower-left outline corner; the crossbar is essential.
+        glyph=[((-4.6,-5.3),(-4.3,-4.5)),((-4.3,-4.5),(-4,-5.3)),
+               ((-4.474,-4.964),(-4.126,-4.964))]
+        commands=[]
+        for line in glyph:
+            for i,(x,y) in enumerate(line):
+                commands.append(f'X{round((22.5+x)*10000)}Y{round((16.8+y)*10000)}D0{2 if i==0 else 1}*')
+        path.write_text(original.replace('M02*','\n'.join(commands)+'\nM02*'),encoding='ascii')
+        self.assertEqual(detect(self.root,self.result,self.data)['corner'],'bl')
+        self.silk([('tr','diagonal')])
+        path.write_text(path.read_text(encoding='ascii').replace('M02*','\n'.join(commands)+'\nM02*'),encoding='ascii')
         self.assertEqual(detect(self.root,self.result,self.data)['corner'],'unknown')
 
 
