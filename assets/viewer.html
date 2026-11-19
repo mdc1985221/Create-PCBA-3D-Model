@@ -123,6 +123,17 @@
       <a id="exportResult" hidden style="color:#8dc1ff" download>保存已生成的图片</a>
     </div>
 
+    <!-- STEP_EXPORT_UI -->
+    <div class="sec" id="stepExportPanel">
+      <button id="stepExport" type="button" style="width:100%;border-color:#4ea1ff;color:#cfe6ff">导出 PCBA 3D（STEP）</button>
+      <label for="stepOutput" style="display:block;margin:9px 0 5px;color:#a8b5c8;font-size:10px">STEP 保存文件夹</label>
+      <input id="stepOutput" placeholder="默认：当前工程文件夹" style="width:100%;min-width:0;background:#1b1f27;color:#e7ebf2;border:1px solid #3d4759;border-radius:5px;padding:6px;font-size:11px">
+      <div class="row" style="margin-top:6px"><button id="stepChoose" type="button">选择文件夹</button><button id="stepDefault" type="button">恢复默认</button></div>
+      <div id="stepStatus" role="status" style="font-size:10px;color:#a8b5c8;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.6">默认保存在当前工程文件夹；导出后显示完整路径。</div>
+      <a id="stepDownload" hidden style="display:block;margin-top:7px;color:#8dc1ff" download>下载已生成的 STEP</a>
+    </div>
+    <!-- /STEP_EXPORT_UI -->
+
     <div class="sec">
       <div class="t">显示</div>
       <label class="chk"><input type="checkbox" id="cComp" checked> 元器件</label>
@@ -1064,6 +1075,7 @@ function calLocks(){
   if(calBusy||!calActive)calStopHold();
   calEl('calRef').disabled=calBusy;
   calEl('calExport').disabled=calBusy||!!pendingParts.length||!!calDirty.size;
+  if(calEl('stepExport')){calEl('stepExport').disabled=calBusy||!!pendingParts.length||!!calDirty.size;calEl('stepExport').title=pendingParts.length?'请先补齐待处理器件':calDirty.size?'请保存或撤销未保存校准':'';}
   calEl('calExport').title=pendingParts.length?'请先补齐 '+pendingParts.length+' 个待处理器件':calDirty.size?'请保存或撤销所有未保存校准':'';
   for(const id of ['mfgCheck','mfgExport']){calEl(id).disabled=calBusy||!!calDirty.size;calEl(id).title=calDirty.size?'请先保存或撤销所有未保存调整':'';}
 }
@@ -1192,13 +1204,6 @@ function calibrationPick(ev){
   if(!nearest||nearest.d>Math.max(.6,Math.hypot(nearest.pad[2],nearest.pad[3])/2)){calMessage('点击位置附近没有本面焊盘，请点击目标焊盘中心。');return;}
   calEl('calDx').value=Number(calEl('calDx').value)+nearest.pad[0]-calPinPoint[0];calEl('calDy').value=Number(calEl('calDy').value)+nearest.pad[1]-calPinPoint[1];calPickStage='';calPinPoint=null;calDraft();
 }
-calEl('calExport').onclick=async()=>{
-  if(boardPending||boardSaving){calMessage('请先完成板色保存，再导出 STP。');return;}
-  if(calBusy||calDirty.size)return;calBusy=true;calLocks();calEl('calDownload').hidden=true;
-  try{await calApi('/api/project/export',{});calMessage('正在按已保存校准导出 STP…');
-    for(;;){await new Promise(resolve=>setTimeout(resolve,1000));const r=await fetch('/api/job?id='+calJobId),job=await r.json();if(!r.ok)throw new Error(job.error);calMessage(job.messages?.at(-1)||'正在导出 STP…');if(job.state==='running')continue;if(job.state!=='done')throw new Error(job.error||'STP 导出失败');const step=job.downloads.find(item=>/\.(stp|step)$/i.test(item.name));if(step){calEl('calDownload').href=step.url;calEl('calDownload').download=step.name;calEl('calDownload').hidden=false;}calMessage('校准 STP 已导出并回读验证通过。');break;}
-  }catch(error){calMessage(error.message);}finally{calBusy=false;calLocks();}
-};
 calLocks();
 function mfgBodyCenter(p){
   const key=modelKey(p);if(bodyCenterCache.has(key))return bodyCenterCache.get(key)?.clone();
@@ -1207,6 +1212,7 @@ function mfgBodyCenter(p){
   const point=box.isEmpty()?null:box.getCenter(new THREE.Vector3());bodyCenterCache.set(key,point);return point?.clone();
 }
 function mfgInvalidate(saved){
+  stepInvalidate('器件调整后需重新导出 STEP；未保存校准请先保存或撤销。');
   if(saved)delete MANUFACTURING.last_export;
   calEl('mfgFiles').replaceChildren();calEl('mfgIssues').replaceChildren();
   calEl('mfgStatus').textContent=saved?'调整已保存，请重新运行检查和导出坐标。':'有未保存调整；请保存或撤销后再检查、导出。';
@@ -1611,6 +1617,7 @@ async function boardSaveColour(){
       await calApi('/api/project/appearance',{color:key});boardSaved=key;boardPending=boardWanted!==boardSaved;
       // Existing downloads describe the previous board colour.
       const link=document.getElementById('calDownload');if(link)link.hidden=true;
+      stepInvalidate('板色已更新，请重新导出 STEP。');
     }
     boardColourStatus.textContent=BOARD_THEMES[boardSaved].label+' · 已保存。图片同步当前颜色；STP 请重新导出。';
   }catch(error){
@@ -1630,6 +1637,57 @@ boardColourRetry.onclick=boardSaveColour;
 boardApplyColour(boardSaved);boardColourStatus.textContent=BOARD_THEMES[boardSaved].label+' · 切换即预览，自动保存。';
 addEventListener('beforeunload',event=>{if(boardPending||boardSaving){event.preventDefault();event.returnValue='板色尚未保存';}});
 /* /BOARD_COLOUR_SCRIPT */
+
+/* STEP_EXPORT_SCRIPT */
+function stepMessage(text){calEl('stepStatus').textContent=text;}
+function stepInvalidate(text){if(calEl('stepDownload')){calEl('stepDownload').hidden=true;stepMessage(text);}}
+function stepLock(value){for(const id of ['stepOutput','stepChoose','stepDefault'])calEl(id).disabled=value;calLocks();calEl('stepExport').disabled=value||!!pendingParts.length||!!calDirty.size;}
+function stepShowJob(job){
+  const file=(job.downloads||[]).find(item=>/\.(stp|step)$/i.test(item.name));
+  const saved=job.report?.step_export;
+  if(file&&!job.report?.step_needs_export){
+    for(const id of ['stepDownload','calDownload']){const link=calEl(id);link.href=file.url;link.download=file.name;link.hidden=false;}
+    stepMessage('STEP 已保存并回读验证通过：\n'+(saved?.path||job.output+' / '+file.name));
+  }else{calEl('stepDownload').hidden=true;stepMessage((job.report?.step_needs_export?'已保存调整，请重新导出 STEP。\n':'')+'默认保存到：\n'+job.output);}
+}
+async function stepPoll(){
+  for(;;){
+    const response=await fetch('/api/job?id='+calJobId),job=await response.json();if(!response.ok)throw new Error(job.error);
+    if(job.state!=='running'){if(job.state!=='done')throw new Error(job.error||'STEP 导出失败');stepShowJob(job);return;}
+    stepMessage(job.messages?.at(-1)||'正在生成 STEP，预览可继续操作…');
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+}
+async function startStepExport(){
+  if(calBusy)return;
+  if(pendingParts.length){stepMessage('请先补齐 '+pendingParts.length+' 个待处理器件，再导出完整 PCBA。');return;}
+  if(calDirty.size){stepMessage('请先保存或撤销所有器件校准，再导出 STEP。');return;}
+  if(boardPending||boardSaving){stepMessage('请先完成板色保存，再导出 STEP。');return;}
+  calBusy=true;stepLock(true);calEl('stepDownload').hidden=true;calEl('calDownload').hidden=true;
+  try{await calApi('/api/project/export',{step_output:calEl('stepOutput').value.trim()});stepMessage('正在按已保存的器件位置、旋转及板色生成 STEP…');await stepPoll();calMessage(calEl('stepStatus').textContent);}
+  catch(error){stepMessage(error.message);calMessage(error.message);}
+  finally{calBusy=false;stepLock(false);}
+}
+calEl('stepExport').onclick=startStepExport;calEl('calExport').onclick=startStepExport;
+new MutationObserver(()=>{if(calEl('calDownload').hidden&&!calEl('stepDownload').hidden)stepInvalidate('器件或板色已调整，请重新导出 STEP。');}).observe(calEl('calDownload'),{attributes:true,attributeFilter:['hidden']});
+calEl('stepDefault').onclick=()=>{calEl('stepOutput').value='';stepMessage('下次导出保存到当前工程文件夹。');};
+calEl('stepChoose').onclick=async()=>{
+  calEl('stepChoose').disabled=true;
+  try{const r=await calApi('/api/folders/choose',{initial:calEl('stepOutput').value.trim()});if(!r.cancelled){calEl('stepOutput').value=r.path;stepMessage('下次导出另存到：\n'+r.path);}}
+  catch(error){stepMessage(error.message);}
+  finally{calEl('stepChoose').disabled=calBusy;}
+};
+if(DATA.board_only)calEl('stepExport').textContent='导出 PCB 3D（STEP）';
+(async()=>{
+  if(!calJobId){stepMessage('请从正在运行的工具打开工程，才能导出 STEP。');calEl('stepExport').disabled=true;return;}
+  try{
+    const r=await fetch('/api/job?id='+calJobId),job=await r.json();if(!r.ok)throw new Error(job.error);
+    calEl('stepOutput').value=job.step_output||'';
+    if(job.state==='running'){calBusy=true;stepLock(true);try{await stepPoll();}finally{calBusy=false;stepLock(false);}}
+    else stepShowJob(job);
+  }catch(error){stepMessage(error.message);}
+})();
+/* /STEP_EXPORT_SCRIPT */
 
 </script>
 </body>

@@ -9,7 +9,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.3.16-public
+        default: v1.3.17-public
 
 permissions:
   contents: write

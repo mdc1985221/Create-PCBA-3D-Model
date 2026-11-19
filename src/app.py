@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 import webbrowser
 from input_support import INPUT_EXTENSIONS, inspect_files, review_files
 
-VERSION = "1.3.16"
+VERSION = "1.3.17"
 MAX_JSON = 142 * 1024 * 1024
 MAX_UPLOAD = 100 * 1024 * 1024
 DEFAULT_PORT = 8234
@@ -97,6 +97,7 @@ class Application:
         self.lock = threading.Lock()
         self.busy = False
         self.server = None
+        self.folder_dialog_lock = threading.Lock()
 
     def library(self):
         from user_models import read_catalog
@@ -331,11 +332,14 @@ class Application:
         return files+latest.get('files',[])
 
     def export_project(self,request):
+        from export_support import folder_path
         with self.lock:
             if self.busy:raise ValueError('正在生成或导出，请等待完成')
             job_id=request.get('id');job=self.jobs.get(job_id)
             if not job or not job.get('preview'):raise ValueError('工程不存在')
             if (job.get('report') or {}).get('incomplete'):raise ValueError('请先补齐待处理器件，再导出完整 STP；已保存的校准会保留')
+            config=read_json(Path(job['output'])/'生成配置.json',{})
+            job['step_output']=folder_path(request.get('step_output',config.get('step_output','')),self.home,self.assets)
             self.busy=True;job.update(state='running',started=time.time(),error=None,messages=['按已保存校准重新导出 STP'])
         threading.Thread(target=self.export_project_worker,args=(job_id,),daemon=True).start()
         return dict(id=job_id)
@@ -346,7 +350,11 @@ class Application:
             from cad_worker import export_isolated
             job=self.jobs[job_id];root=Path(job['output']);name=read(root/'data.json')['board']['name']
             export_isolated(root,root/(safe_name(name)+'.stp'),lambda message:self.progress(job_id,message))
-            report=read(root/'导入检查.json',job.get('report') or {});report['step_needs_export']=False;dump(root/'导入检查.json',report)
+            from export_support import save_verified_step
+            saved=save_verified_step(root,root/(safe_name(name)+'.stp'),job.get('step_output',''))
+            report=read(root/'导入检查.json',job.get('report') or {});report.update(step_needs_export=False,step_export=saved);dump(root/'导入检查.json',report)
+            config=read(root/'生成配置.json',{});config['step_output']=job.get('step_output','');dump(root/'生成配置.json',config)
+            self.progress(job_id,'STEP 已保存：'+saved['path'])
             with self.lock:job.update(state='done',report=report,downloads=self.project_downloads(job_id,root),finished=time.time());job['messages'].append('校准 STP 导出和回读验证完成')
         except Exception as error:
             with self.lock:self.jobs[job_id].update(state='error',error=str(error),finished=time.time())
@@ -358,6 +366,8 @@ class Application:
         if not isinstance(config, dict):
             raise ValueError("配置格式错误")
         config = dict(config)
+        from export_support import folder_path
+        config['step_output']=folder_path(config.get('step_output',''),self.home,self.assets)
         if not sample:
             board_only=config.get('board_only',not bool(config.get('xy')))
             if not isinstance(board_only,bool):raise ValueError('board_only 必须为布尔值')
@@ -396,7 +406,7 @@ class Application:
             job_id = secrets.token_hex(8)
             destination = output_root / (config["name"] + "_" + time.strftime("%Y%m%d_%H%M%S") + "_" + job_id[:4])
             job = dict(id=job_id, state="running", messages=["准备生成"], output=str(destination), report=None, error=None,
-                       started=time.time(), preview=None, downloads=[])
+                       started=time.time(), preview=None, downloads=[],step_output=config.get('step_output',''))
             self.jobs[job_id] = job
         threading.Thread(target=self.run_job, args=(job_id, destination, files, config, sample), daemon=True).start()
         return {"id": job_id}
@@ -450,6 +460,11 @@ class Application:
                 self.progress(job_id, "预览已就绪，正在导出 STP")
                 from cad_worker import export_isolated
                 export_isolated(destination, step_destination, lambda message: self.progress(job_id, message))
+                from export_support import save_verified_step
+                report['step_export']=save_verified_step(destination,step_destination,config.get('step_output',''))
+                from calibration import dump
+                dump(destination/'导入检查.json',report)
+                self.progress(job_id,'STEP 已保存：'+report['step_export']['path'])
             downloads = self.project_downloads(job_id,destination)
             with self.lock:
                 job = self.jobs[job_id]
@@ -543,8 +558,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self.respond({"error": "STP 尚未完成验证，请等待导出完成"}, 409)
                 root = Path(job["output"])
                 if pieces[3] == 'index.html':
-                    from viewer_support import upgrade_image_export
-                    body = upgrade_image_export((root/'index.html').read_text(encoding='utf8'), self.app.assets).encode('utf8')
+                    from viewer_support import upgrade_image_export,upgrade_step_export
+                    body = upgrade_step_export(upgrade_image_export((root/'index.html').read_text(encoding='utf8'), self.app.assets),self.app.assets).encode('utf8')
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/html; charset=utf-8')
                     self.send_header('Content-Length', str(len(body)))
@@ -612,6 +627,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(self.app.calibration_operation(request))
             if path == '/api/project/export':
                 return self.respond(self.app.export_project(request),202)
+            if path == '/api/folders/choose':
+                from export_support import choose_folder,folder_path
+                if not self.app.folder_dialog_lock.acquire(blocking=False):raise ValueError('文件夹选择窗口已打开')
+                try:
+                    initial=folder_path(request.get('initial',''),self.app.home,self.app.assets) or str(self.app.default_output)
+                    return self.respond(choose_folder(initial))
+                finally:self.app.folder_dialog_lock.release()
             if path == '/api/project/refresh':
                 return self.respond(self.app.refresh_project(request))
             if path == '/api/project/appearance':
